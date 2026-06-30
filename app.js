@@ -1442,10 +1442,11 @@ adminUnbanBtnEl?.addEventListener("click", adminUnbanUser);
 
 
 
+
 function renderOnlinePlayers(players) {
   if (!onlineBubbleEl || !onlineCountEl || !onlineListEl) return;
 
-  if (!currentUser) {
+  if (!currentUser || isCurrentUserBanned()) {
     onlineBubbleEl.classList.add("hidden");
     onlineCountEl.textContent = "0 online";
     onlineListEl.innerHTML = "";
@@ -1455,7 +1456,7 @@ function renderOnlinePlayers(players) {
   const unique = new Map();
 
   for (const player of players) {
-    if (!player?.user_id) continue;
+    if (!player?.user_id || player.is_banned) continue;
     if (!unique.has(player.user_id)) {
       unique.set(player.user_id, player);
     }
@@ -1492,15 +1493,10 @@ function renderOnlinePlayers(players) {
   }
 }
 
-function updateOnlineFromPresence() {
-  if (!onlineChannel) {
-    renderOnlinePlayers([]);
-    return;
-  }
-
-  const state = onlineChannel.presenceState();
-  const players = Object.values(state).flat();
-  renderOnlinePlayers(players);
+function isCurrentUserBanned() {
+  if (!currentProfile?.is_banned) return false;
+  if (!currentProfile.banned_until) return true;
+  return new Date(currentProfile.banned_until).getTime() > Date.now();
 }
 
 function stopOnlinePresence() {
@@ -1513,7 +1509,7 @@ function stopOnlinePresence() {
 }
 
 function startOnlinePresence() {
-  if (!supabaseClient || !currentUser) {
+  if (!supabaseClient || !currentUser || isCurrentUserBanned()) {
     stopOnlinePresence();
     return;
   }
@@ -1541,6 +1537,7 @@ function startOnlinePresence() {
         user_id: currentUser.id,
         username: profile.username,
         avatar_url: profile.avatar_url,
+        is_banned: !!currentProfile?.is_banned,
         online_at: new Date().toISOString()
       });
 
@@ -1549,12 +1546,15 @@ function startOnlinePresence() {
 }
 
 
+
 function renderAuth() {
   if (!authBox) return;
+
   if (!supabaseClient) {
     authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
     return;
   }
+
   if (!currentUser) {
     authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
     document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
@@ -1562,9 +1562,8 @@ function renderAuth() {
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
-
-  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
 
   authBox.innerHTML = `
     <div class="auth-user">
@@ -1574,6 +1573,7 @@ function renderAuth() {
     ${adminButton}
     <button id="logoutBtn">Logout</button>
   `;
+
   document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
@@ -1885,14 +1885,19 @@ async function placeAt(tileX, tileY) {
   }
 
   if (!currentUser) {
-    showToast('Login required');
+    showToast("Login required");
+    return;
+  }
+
+  if (isCurrentUserBanned()) {
+    showToast("Account banned");
     return;
   }
 
   if (isPlacing) return;
   isPlacing = true;
 
-  const { data, error } = await supabaseClient.rpc('place_block', {
+  const { data, error } = await supabaseClient.rpc("place_block", {
     p_x: tileX,
     p_y: tileY,
     p_block_id: selectedBlock
@@ -1901,25 +1906,26 @@ async function placeAt(tileX, tileY) {
   isPlacing = false;
 
   if (error) {
-    showToast('Could not place block');
+    showToast("Could not place block");
     return;
   }
 
   if (!data?.success) {
-    const code = data?.error || 'error';
-    if (code === 'no_blocks') {
+    const code = data?.error || "error";
+
+    if (code === "no_blocks") {
       if (data.state) playerState = normalizePlayerState(data.state);
       renderBlocks();
-      showToast('No blocks');
+      showToast("No blocks");
       return;
     }
 
-    if (code === 'user_banned') {
-      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : 'Account banned');
+    if (code === "user_banned") {
+      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : "Account banned");
       return;
     }
 
-    showToast(code.replaceAll('_', ' '));
+    showToast(code.replaceAll("_", " "));
     return;
   }
 
@@ -2211,9 +2217,10 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 28;
+const MINEPLACE_VERSION = 29;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
+  "Inappropriate Username",
   "Harassment",
   "Offensive Text",
   "Other"
@@ -2247,10 +2254,12 @@ let reportSearchTimer = null;
 
 function renderAuth() {
   if (!authBox) return;
+
   if (!supabaseClient) {
     authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
     return;
   }
+
   if (!currentUser) {
     authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
     document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
@@ -2258,21 +2267,18 @@ function renderAuth() {
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
-  const reportButton = '<button id="reportBtn" class="small-btn">Report</button>';
-  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
 
   authBox.innerHTML = `
     <div class="auth-user">
       ${avatar}
       <span>${escapeHtml(profile.username)}</span>
     </div>
-    ${reportButton}
     ${adminButton}
     <button id="logoutBtn">Logout</button>
   `;
 
-  document.getElementById('reportBtn')?.addEventListener('click', () => openReportModal());
   document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }

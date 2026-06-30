@@ -1564,3 +1564,48 @@ textarea,
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Version 29 bugfix */
+.block-search,
+.search-input {
+  background: rgba(19, 38, 16, .92) !important;
+  color: rgba(255,255,255,.92) !important;
+  caret-color: #7bd88f !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+}
+
+.block-search::placeholder,
+.search-input::placeholder {
+  color: rgba(255,255,255,.45) !important;
+}
+
+#world {
+  cursor: crosshair !important;
+}
+
+button,
+.small-btn,
+.block,
+input[type="range"],
+select {
+  cursor: pointer !important;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+.admin-input,
+.admin-textarea,
+.block-search {
+  cursor: text !important;
+}
+
+.sheet-card {
+  background: linear-gradient(180deg, rgba(44, 78, 35, .96), rgba(28, 52, 24, .96)) !important;
+}
+
+.report-details {
+  overflow-wrap: anywhere;
+}
