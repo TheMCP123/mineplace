@@ -8,8 +8,7 @@ const cooldownLabel = document.getElementById("cooldownLabel");
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
-const CHUNK_SIZE = 32;
-const COOLDOWN_MS = 1500; // для прототипа быстро; потом поставим 15-30 секунд
+const COOLDOWN_MS = 1500; // прототип; после базы поставим 15-30 секунд
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -66,7 +65,6 @@ function makeTexture(blockId) {
     }
   }
 
-  // простая псевдо-тень, чтобы блоки не были плоскими
   g.fillStyle = "rgba(255,255,255,.08)";
   g.fillRect(0, 0, TILE_SIZE, 1);
   g.fillRect(0, 0, 1, TILE_SIZE);
@@ -158,8 +156,6 @@ function drawGrid(viewW, viewH) {
   const endX = Math.min(MAP_SIZE - 1, Math.ceil(worldRight / TILE_SIZE));
   const endY = Math.min(MAP_SIZE - 1, Math.ceil(worldBottom / TILE_SIZE));
 
-  // фон дефолтной карты
-  const defaultTexture = getTexture("grass");
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
       const block = placed.get(key(x, y)) || "grass";
@@ -183,7 +179,6 @@ function drawGrid(viewW, viewH) {
     ctx.stroke();
   }
 
-  // граница мира
   ctx.strokeStyle = "rgba(255,255,255,.35)";
   ctx.lineWidth = 2 / camera.zoom;
   ctx.strokeRect(0, 0, MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
@@ -238,8 +233,8 @@ function placeAt(tileX, tileY) {
   saveLocal();
   draw();
 
-  // В будущей версии тут будет:
-  // await fetch("/api/place-block", { method: "POST", body: JSON.stringify({ x: tileX, y: tileY, block_id: selectedBlock }) })
+  // Следующий этап:
+  // POST в Supabase / API вместо localStorage.
 }
 
 function buildPalette() {
@@ -296,7 +291,7 @@ canvas.addEventListener("pointermove", e => {
   }
 });
 
-canvas.addEventListener("pointerup", e => {
+canvas.addEventListener("pointerup", () => {
   isPanning = false;
   canvas.style.cursor = "crosshair";
 });
@@ -342,56 +337,6 @@ document.getElementById("resetBtn").onclick = () => {
   placed.clear();
   localStorage.removeItem("mineplace:map");
   draw();
-};
-
-document.getElementById("exportBtn").onclick = () => {
-  const data = [];
-  for (const [k, block] of placed.entries()) {
-    const [x, y] = k.split(",").map(Number);
-    data.push({ x, y, block });
-  }
-
-  const blob = new Blob([JSON.stringify({ version: 1, mapSize: MAP_SIZE, blocks: data }, null, 2)], {
-    type: "application/json"
-  });
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "mineplace-map.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-
-document.getElementById("importInput").onchange = async e => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  try {
-    const json = JSON.parse(await file.text());
-    const arr = Array.isArray(json.blocks) ? json.blocks : [];
-    placed.clear();
-
-    for (const item of arr) {
-      if (
-        Number.isInteger(item.x) &&
-        Number.isInteger(item.y) &&
-        item.x >= 0 &&
-        item.y >= 0 &&
-        item.x < MAP_SIZE &&
-        item.y < MAP_SIZE &&
-        BLOCKS[item.block]
-      ) {
-        placed.set(key(item.x, item.y), item.block);
-      }
-    }
-
-    saveLocal();
-    draw();
-  } catch {
-    alert("Не удалось импортировать JSON.");
-  } finally {
-    e.target.value = "";
-  }
 };
 
 window.addEventListener("resize", resize);

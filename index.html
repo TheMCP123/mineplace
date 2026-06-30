@@ -11,7 +11,7 @@
     <header class="topbar">
       <div>
         <h1>Mineplace</h1>
-        <p>Прототип block-place canvas без базы данных</p>
+        <p>Block-place canvas prototype</p>
       </div>
 
       <div class="stats">
@@ -41,19 +41,14 @@
       <section class="panel">
         <h2>Карта</h2>
         <button id="centerBtn">В центр</button>
-        <button id="exportBtn">Экспорт JSON</button>
-        <label class="file-btn">
-          Импорт JSON
-          <input id="importInput" type="file" accept="application/json" />
-        </label>
         <button id="resetBtn" class="danger">Очистить локально</button>
       </section>
 
       <section class="panel small">
-        <h2>Пока без базы</h2>
+        <h2>Mineplace</h2>
         <p>
-          Сейчас карта сохраняется в браузере. Потом вместо localStorage подключим API:
-          <code>POST /api/place-block</code> и <code>GET /api/chunks</code>.
+          Это ранний прототип. Сейчас карта хранится локально в браузере.
+          Следующий этап — база, аккаунты и realtime.
         </p>
       </section>
     </aside>
