@@ -592,6 +592,348 @@ const BLOCK_DEFS = [
     "name": "Yellow Wool",
     "src": "/textures/yellow_wool.png",
     "sort_order": 910
+  },
+  {
+    "id": "acacia_log",
+    "name": "Acacia Log",
+    "src": "/textures/acacia_log.png",
+    "sort_order": 920
+  },
+  {
+    "id": "acacia_log_top",
+    "name": "Acacia Log Top",
+    "src": "/textures/acacia_log_top.png",
+    "sort_order": 930
+  },
+  {
+    "id": "acacia_planks",
+    "name": "Acacia Planks",
+    "src": "/textures/acacia_planks.png",
+    "sort_order": 940
+  },
+  {
+    "id": "bamboo_planks",
+    "name": "Bamboo Planks",
+    "src": "/textures/bamboo_planks.png",
+    "sort_order": 950
+  },
+  {
+    "id": "birch_log",
+    "name": "Birch Log",
+    "src": "/textures/birch_log.png",
+    "sort_order": 960
+  },
+  {
+    "id": "birch_log_top",
+    "name": "Birch Log Top",
+    "src": "/textures/birch_log_top.png",
+    "sort_order": 970
+  },
+  {
+    "id": "birch_planks",
+    "name": "Birch Planks",
+    "src": "/textures/birch_planks.png",
+    "sort_order": 980
+  },
+  {
+    "id": "cherry_log",
+    "name": "Cherry Log",
+    "src": "/textures/cherry_log.png",
+    "sort_order": 990
+  },
+  {
+    "id": "cherry_log_top",
+    "name": "Cherry Log Top",
+    "src": "/textures/cherry_log_top.png",
+    "sort_order": 1000
+  },
+  {
+    "id": "cherry_planks",
+    "name": "Cherry Planks",
+    "src": "/textures/cherry_planks.png",
+    "sort_order": 1010
+  },
+  {
+    "id": "chiseled_nether_bricks",
+    "name": "Chiseled Nether Bricks",
+    "src": "/textures/chiseled_nether_bricks.png",
+    "sort_order": 1020
+  },
+  {
+    "id": "cracked_nether_bricks",
+    "name": "Cracked Nether Bricks",
+    "src": "/textures/cracked_nether_bricks.png",
+    "sort_order": 1030
+  },
+  {
+    "id": "crimson_planks",
+    "name": "Crimson Planks",
+    "src": "/textures/crimson_planks.png",
+    "sort_order": 1040
+  },
+  {
+    "id": "dark_oak_log",
+    "name": "Dark Oak Log",
+    "src": "/textures/dark_oak_log.png",
+    "sort_order": 1050
+  },
+  {
+    "id": "dark_oak_log_top",
+    "name": "Dark Oak Log Top",
+    "src": "/textures/dark_oak_log_top.png",
+    "sort_order": 1060
+  },
+  {
+    "id": "dark_oak_planks",
+    "name": "Dark Oak Planks",
+    "src": "/textures/dark_oak_planks.png",
+    "sort_order": 1070
+  },
+  {
+    "id": "jungle_log",
+    "name": "Jungle Log",
+    "src": "/textures/jungle_log.png",
+    "sort_order": 1080
+  },
+  {
+    "id": "jungle_log_top",
+    "name": "Jungle Log Top",
+    "src": "/textures/jungle_log_top.png",
+    "sort_order": 1090
+  },
+  {
+    "id": "jungle_planks",
+    "name": "Jungle Planks",
+    "src": "/textures/jungle_planks.png",
+    "sort_order": 1100
+  },
+  {
+    "id": "lava",
+    "name": "Lava",
+    "src": "/textures/lava.png",
+    "sort_order": 1110
+  },
+  {
+    "id": "mangrove_log",
+    "name": "Mangrove Log",
+    "src": "/textures/mangrove_log.png",
+    "sort_order": 1120
+  },
+  {
+    "id": "mangrove_log_top",
+    "name": "Mangrove Log Top",
+    "src": "/textures/mangrove_log_top.png",
+    "sort_order": 1130
+  },
+  {
+    "id": "mangrove_planks",
+    "name": "Mangrove Planks",
+    "src": "/textures/mangrove_planks.png",
+    "sort_order": 1140
+  },
+  {
+    "id": "nether_bricks",
+    "name": "Nether Bricks",
+    "src": "/textures/nether_bricks.png",
+    "sort_order": 1150
+  },
+  {
+    "id": "netherrack",
+    "name": "Netherrack",
+    "src": "/textures/netherrack.png",
+    "sort_order": 1160
+  },
+  {
+    "id": "oak_log",
+    "name": "Oak Log",
+    "src": "/textures/oak_log.png",
+    "sort_order": 1170
+  },
+  {
+    "id": "oak_log_top",
+    "name": "Oak Log Top",
+    "src": "/textures/oak_log_top.png",
+    "sort_order": 1180
+  },
+  {
+    "id": "oak_planks",
+    "name": "Oak Planks",
+    "src": "/textures/oak_planks.png",
+    "sort_order": 1190
+  },
+  {
+    "id": "pale_oak_log",
+    "name": "Pale Oak Log",
+    "src": "/textures/pale_oak_log.png",
+    "sort_order": 1200
+  },
+  {
+    "id": "pale_oak_log_top",
+    "name": "Pale Oak Log Top",
+    "src": "/textures/pale_oak_log_top.png",
+    "sort_order": 1210
+  },
+  {
+    "id": "pale_oak_planks",
+    "name": "Pale Oak Planks",
+    "src": "/textures/pale_oak_planks.png",
+    "sort_order": 1220
+  },
+  {
+    "id": "purpur_block",
+    "name": "Purpur Block",
+    "src": "/textures/purpur_block.png",
+    "sort_order": 1230
+  },
+  {
+    "id": "purpur_pillar_side",
+    "name": "Purpur Pillar Side",
+    "src": "/textures/purpur_pillar_side.png",
+    "sort_order": 1240
+  },
+  {
+    "id": "purpur_pillar_top",
+    "name": "Purpur Pillar Top",
+    "src": "/textures/purpur_pillar_top.png",
+    "sort_order": 1250
+  },
+  {
+    "id": "spruce_log",
+    "name": "Spruce Log",
+    "src": "/textures/spruce_log.png",
+    "sort_order": 1260
+  },
+  {
+    "id": "spruce_log_top",
+    "name": "Spruce Log Top",
+    "src": "/textures/spruce_log_top.png",
+    "sort_order": 1270
+  },
+  {
+    "id": "spruce_planks",
+    "name": "Spruce Planks",
+    "src": "/textures/spruce_planks.png",
+    "sort_order": 1280
+  },
+  {
+    "id": "stripped_acacia_log",
+    "name": "Stripped Acacia Log",
+    "src": "/textures/stripped_acacia_log.png",
+    "sort_order": 1290
+  },
+  {
+    "id": "stripped_acacia_log_top",
+    "name": "Stripped Acacia Log Top",
+    "src": "/textures/stripped_acacia_log_top.png",
+    "sort_order": 1300
+  },
+  {
+    "id": "stripped_birch_log",
+    "name": "Stripped Birch Log",
+    "src": "/textures/stripped_birch_log.png",
+    "sort_order": 1310
+  },
+  {
+    "id": "stripped_birch_log_top",
+    "name": "Stripped Birch Log Top",
+    "src": "/textures/stripped_birch_log_top.png",
+    "sort_order": 1320
+  },
+  {
+    "id": "stripped_cherry_log",
+    "name": "Stripped Cherry Log",
+    "src": "/textures/stripped_cherry_log.png",
+    "sort_order": 1330
+  },
+  {
+    "id": "stripped_cherry_log_top",
+    "name": "Stripped Cherry Log Top",
+    "src": "/textures/stripped_cherry_log_top.png",
+    "sort_order": 1340
+  },
+  {
+    "id": "stripped_dark_oak_log",
+    "name": "Stripped Dark Oak Log",
+    "src": "/textures/stripped_dark_oak_log.png",
+    "sort_order": 1350
+  },
+  {
+    "id": "stripped_dark_oak_log_top",
+    "name": "Stripped Dark Oak Log Top",
+    "src": "/textures/stripped_dark_oak_log_top.png",
+    "sort_order": 1360
+  },
+  {
+    "id": "stripped_jungle_log",
+    "name": "Stripped Jungle Log",
+    "src": "/textures/stripped_jungle_log.png",
+    "sort_order": 1370
+  },
+  {
+    "id": "stripped_jungle_log_top",
+    "name": "Stripped Jungle Log Top",
+    "src": "/textures/stripped_jungle_log_top.png",
+    "sort_order": 1380
+  },
+  {
+    "id": "stripped_mangrove_log",
+    "name": "Stripped Mangrove Log",
+    "src": "/textures/stripped_mangrove_log.png",
+    "sort_order": 1390
+  },
+  {
+    "id": "stripped_mangrove_log_top",
+    "name": "Stripped Mangrove Log Top",
+    "src": "/textures/stripped_mangrove_log_top.png",
+    "sort_order": 1400
+  },
+  {
+    "id": "stripped_oak_log",
+    "name": "Stripped Oak Log",
+    "src": "/textures/stripped_oak_log.png",
+    "sort_order": 1410
+  },
+  {
+    "id": "stripped_oak_log_top",
+    "name": "Stripped Oak Log Top",
+    "src": "/textures/stripped_oak_log_top.png",
+    "sort_order": 1420
+  },
+  {
+    "id": "stripped_pale_oak_log",
+    "name": "Stripped Pale Oak Log",
+    "src": "/textures/stripped_pale_oak_log.png",
+    "sort_order": 1430
+  },
+  {
+    "id": "stripped_pale_oak_log_top",
+    "name": "Stripped Pale Oak Log Top",
+    "src": "/textures/stripped_pale_oak_log_top.png",
+    "sort_order": 1440
+  },
+  {
+    "id": "stripped_spruce_log",
+    "name": "Stripped Spruce Log",
+    "src": "/textures/stripped_spruce_log.png",
+    "sort_order": 1450
+  },
+  {
+    "id": "stripped_spruce_log_top",
+    "name": "Stripped Spruce Log Top",
+    "src": "/textures/stripped_spruce_log_top.png",
+    "sort_order": 1460
+  },
+  {
+    "id": "warped_planks",
+    "name": "Warped Planks",
+    "src": "/textures/warped_planks.png",
+    "sort_order": 1470
+  },
+  {
+    "id": "water",
+    "name": "Water",
+    "src": "/textures/water.png",
+    "sort_order": 1480
   }
 ];
 const LEGACY_BLOCKS = {
