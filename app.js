@@ -3,9 +3,9 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bjnUPSDIi8yQdnzvMxhCJg_mlVczei7
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 if (!supabaseClient) {
-  console.warn("Supabase SDK не загрузился.");
+  console.warn("Supabase SDK failed to load.");
 } else {
-  console.log("Supabase подключён:", SUPABASE_URL);
+  console.log("Supabase connected:", SUPABASE_URL);
 }
 
 const canvas = document.getElementById("world");
@@ -29,7 +29,7 @@ document.querySelector(".stats")?.appendChild(supabaseStatusLabel);
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
-const COOLDOWN_MS = 1500; // прототип; после базы поставим 15-30 секунд
+const COOLDOWN_MS = 1500; // prototype; after database saving we will set 15-30 seconds
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -138,7 +138,7 @@ async function ensureProfile(sessionUser) {
     }, { onConflict: "id" });
 
   if (error) {
-    console.warn("Не удалось создать/обновить profile:", error.message);
+    console.warn("Failed to create/update profile:", error.message);
   }
 }
 
@@ -242,7 +242,7 @@ async function loadFromDatabase() {
     .limit(5000);
 
   if (error) {
-    console.warn("База пока не отдала блоки:", error.message);
+    console.warn("Database did not return blocks yet:", error.message);
     return false;
   }
 
@@ -257,6 +257,35 @@ async function loadFromDatabase() {
   return true;
 }
 
+
+function subscribeToRealtime() {
+  if (!supabaseClient) return;
+
+  supabaseClient
+    .channel("placed-blocks-map")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "placed_blocks"
+      },
+      payload => {
+        const row = payload.new;
+
+        if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y)) return;
+        if (!BLOCKS[row.block_id]) return;
+
+        placed.set(key(row.x, row.y), row.block_id);
+        draw();
+      }
+    )
+    .subscribe(status => {
+      console.log("Realtime status:", status);
+    });
+}
+
+
 function loadLocal() {
   try {
     const raw = localStorage.getItem("mineplace:map");
@@ -268,7 +297,7 @@ function loadLocal() {
       }
     }
   } catch {
-    console.warn("Не удалось загрузить localStorage карту");
+    console.warn("Failed to load localStorage map");
   }
 }
 
@@ -393,24 +422,68 @@ function updateCooldown() {
   }
 }
 
-function placeAt(tileX, tileY) {
+async function placeAt(tileX, tileY) {
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
   if (supabaseClient && !currentUser) {
-    alert("Сначала войди через Discord.");
+    alert("Please log in with Discord first.");
     return;
   }
 
   if (!canPlace()) return;
 
-  placed.set(key(tileX, tileY), selectedBlock);
+  if (!supabaseClient) {
+    placed.set(key(tileX, tileY), selectedBlock);
+    lastPlaceAt = Date.now();
+    localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
+    saveLocal();
+    draw();
+    return;
+  }
+
+  const chosenBlock = selectedBlock;
+
+  const { data, error } = await supabaseClient.rpc("place_block", {
+    p_x: tileX,
+    p_y: tileY,
+    p_block_id: chosenBlock
+  });
+
+  if (error) {
+    const msg = error.message || "";
+
+    if (msg.includes("cooldown_active")) {
+      cooldownLabel.textContent = "cooldown";
+      cooldownLabel.style.color = "#ffd166";
+      return;
+    }
+
+    if (msg.includes("user_banned")) {
+      alert("Your account is banned.");
+      return;
+    }
+
+    if (msg.includes("not_authenticated")) {
+      alert("Please log in with Discord first.");
+      return;
+    }
+
+    alert("Could not place block: " + msg);
+    console.warn("place_block error:", error);
+    return;
+  }
+
+  const saved = Array.isArray(data) ? data[0] : null;
+
+  if (saved) {
+    placed.set(key(saved.x, saved.y), saved.block_id);
+  } else {
+    placed.set(key(tileX, tileY), chosenBlock);
+  }
+
   lastPlaceAt = Date.now();
   localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
-  saveLocal();
   draw();
-
-  // Следующий этап:
-  // POST в Supabase / API вместо localStorage.
 }
 
 function buildPalette() {
@@ -509,7 +582,7 @@ document.getElementById("centerBtn").onclick = () => {
 };
 
 document.getElementById("resetBtn").onclick = () => {
-  if (!confirm("Очистить локальную карту?")) return;
+  if (!confirm("Clear the local map?")) return;
   placed.clear();
   localStorage.removeItem("mineplace:map");
   draw();
@@ -527,5 +600,6 @@ window.addEventListener("resize", resize);
 
   buildPalette();
   resize();
+  subscribeToRealtime();
   setInterval(draw, 1000);
 })();

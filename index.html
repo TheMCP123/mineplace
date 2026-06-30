@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +11,7 @@
     <header class="topbar">
       <div>
         <h1>Mineplace</h1>
-        <p>Block-place canvas prototype</p>
+        <p>Block-based collaborative canvas prototype</p>
       </div>
 
       <div class="top-actions">
@@ -31,30 +31,30 @@
       <canvas id="world"></canvas>
 
       <div class="help">
-        <b>Управление:</b>
-        <span>ЛКМ — поставить блок</span>
-        <span>ПКМ/средняя кнопка/Space + drag — двигать карту</span>
-        <span>Колесо — zoom</span>
+        <b>Controls:</b>
+        <span>Left click — place block</span>
+        <span>Right click / middle click / Space + drag — move map</span>
+        <span>Mouse wheel — zoom</span>
       </div>
     </main>
 
     <aside class="sidebar">
       <section class="panel">
-        <h2>Блоки</h2>
+        <h2>Blocks</h2>
         <div id="palette" class="palette"></div>
       </section>
 
       <section class="panel">
-        <h2>Карта</h2>
-        <button id="centerBtn">В центр</button>
-        <button id="resetBtn" class="danger">Очистить локально</button>
+        <h2>Map</h2>
+        <button id="centerBtn">Center map</button>
+        <button id="resetBtn" class="danger">Clear local map</button>
       </section>
 
       <section class="panel small">
         <h2>Mineplace</h2>
         <p>
-          Это ранний прототип. Сейчас карта хранится локально в браузере.
-          Следующий этап — база, аккаунты и realtime.
+          Discord login is connected. Blocks are saved to the database and synced in realtime.
+          This is still an early prototype.
         </p>
       </section>
     </aside>
