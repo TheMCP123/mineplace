@@ -686,37 +686,13 @@ button:hover {
   }
 }
 
-body,
-#world {
-  cursor: url('/ui/cursor_default.png') 8 8, auto;
-}
 
-button,
-.small-btn,
-.block,
-input[type="button"],
-input[type="range"],
-input[type="checkbox"],
-input[type="search"],
-input[type="number"],
-select,
-summary {
-  cursor: url('/ui/cursor_pointer.png') 8 8, pointer;
-}
 
-input[type="text"],
-input[type="search"],
-input[type="number"],
-textarea,
-.admin-input,
-.admin-textarea {
-  cursor: url('/ui/cursor_text.png') 10 16, text;
-}
 
-body.is-grabbing,
-body.is-grabbing #world {
-  cursor: url('/ui/cursor_grab.png') 12 12, grabbing !important;
-}
+
+
+
+
 
 .inspect-owner-card {
   display: flex;
@@ -917,20 +893,57 @@ body.is-grabbing #world {
   box-shadow: 0 0 0 3px rgba(123,216,143,.28);
 }
 
-body,
+
+
+
+
+
+
+
+
+@media (max-width: 760px) {
+  .hud-auth {
+    top: 10px;
+    right: 10px;
+  }
+
+  .block-search {
+    width: 170px;
+  }
+}
+
+
+/* Version 27 final fixes */
 #world {
-  cursor: url('/ui/cursor_default.png') 4 4, auto;
+  cursor: crosshair !important;
+}
+
+#world.cursor-inspect-tool {
+  cursor: url('/ui/cursor_grid.png') 4 4, help !important;
+}
+
+body,
+button,
+.small-btn,
+.block,
+input,
+select,
+textarea,
+.admin-input,
+.admin-textarea,
+.palette-wrap,
+.hud,
+.sheet-modal,
+.admin-modal {
+  cursor: auto !important;
 }
 
 button,
 .small-btn,
 .block,
-input[type="button"],
 input[type="range"],
-input[type="checkbox"],
-select,
-summary {
-  cursor: url('/ui/cursor_pointer.png') 4 4, pointer;
+select {
+  cursor: pointer !important;
 }
 
 input[type="text"],
@@ -938,13 +951,326 @@ input[type="search"],
 input[type="number"],
 textarea,
 .admin-input,
-.admin-textarea {
-  cursor: url('/ui/cursor_text.png') 8 14, text;
+.admin-textarea,
+.block-search {
+  cursor: text !important;
 }
 
-body.is-grabbing,
-body.is-grabbing #world {
-  cursor: url('/ui/cursor_grab.png') 8 8, grabbing !important;
+.block-search,
+.search-input {
+  background: rgba(255,255,255,.94) !important;
+  color: #111827 !important;
+  caret-color: #111827 !important;
+  border: 1px solid rgba(0,0,0,.12) !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  outline: none !important;
+  font-weight: 700 !important;
+}
+
+.block-search::placeholder,
+.search-input::placeholder {
+  color: rgba(17,24,39,.58) !important;
+  opacity: 1 !important;
+}
+
+.block img {
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.block.tool-block img {
+  width: 32px !important;
+  height: 32px !important;
+  display: block !important;
+}
+
+.block.tool-block::after {
+  content: "Cursor";
+  right: 4px;
+  bottom: 3px;
+  font-size: 8px;
+  padding: 2px 4px;
+  max-width: 42px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+
+/* Version 27 final report/UI/cursor fixes */
+#world {
+  cursor: crosshair !important;
+}
+
+#world.cursor-inspect-tool {
+  cursor: url('/ui/cursor_grid.png') 4 4, help !important;
+}
+
+body,
+.hud,
+.palette-wrap,
+.sheet-modal,
+.admin-modal,
+button,
+.small-btn,
+.block,
+input,
+select,
+textarea,
+.admin-input,
+.admin-textarea {
+  cursor: auto !important;
+}
+
+button,
+.small-btn,
+.block,
+input[type="range"],
+select {
+  cursor: pointer !important;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+.admin-input,
+.admin-textarea,
+.block-search {
+  cursor: text !important;
+}
+
+.hud-auth {
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+}
+
+.inventory-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 8px;
+}
+
+.block-search,
+.search-input {
+  width: 220px;
+  max-width: 45vw;
+  background: rgba(255,255,255,.94) !important;
+  color: #111827 !important;
+  caret-color: #111827 !important;
+  border: 1px solid rgba(0,0,0,.12) !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  outline: none !important;
+  font-weight: 800 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.block-search::placeholder,
+.search-input::placeholder {
+  color: rgba(17,24,39,.58) !important;
+  opacity: 1 !important;
+}
+
+.block img {
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.block.tool-block img {
+  width: 32px !important;
+  height: 32px !important;
+  display: block !important;
+}
+
+.block.tool-block::after {
+  content: "Cursor";
+  right: 4px;
+  bottom: 3px;
+  font-size: 8px;
+  padding: 2px 4px;
+  max-width: 42px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Clean report modal */
+.sheet-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 8, 5, .55);
+  backdrop-filter: blur(6px);
+}
+
+.sheet-modal.hidden {
+  display: none !important;
+}
+
+.sheet-card {
+  width: min(520px, calc(100vw - 28px));
+  max-height: min(720px, calc(100vh - 28px));
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  background: rgba(34, 61, 27, .94);
+  box-shadow: 0 24px 80px rgba(0,0,0,.45);
+  padding: 18px;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.sheet-head strong {
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: .01em;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.sheet-label {
+  display: grid;
+  gap: 7px;
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sheet-label.full {
+  grid-column: 1 / -1;
+}
+
+.sheet-label span {
+  padding-left: 2px;
+}
+
+.sheet-card .admin-input,
+.sheet-card select.admin-input,
+.sheet-card textarea.admin-input {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 14px !important;
+  background: rgba(11, 24, 9, .72) !important;
+  color: #fff !important;
+  padding: 11px 12px !important;
+  font-weight: 850 !important;
+  outline: none !important;
+}
+
+.sheet-card .admin-input:focus {
+  border-color: rgba(123,216,143,.8) !important;
+  box-shadow: 0 0 0 3px rgba(123,216,143,.18);
+}
+
+.sheet-card .admin-input::placeholder {
+  color: rgba(255,255,255,.42) !important;
+}
+
+.admin-textarea {
+  min-height: 105px;
+  resize: vertical;
+  line-height: 1.35;
+}
+
+.sheet-note {
+  color: rgba(255,255,255,.55);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* Admin reports look like cards */
+.admin-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+
+.admin-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.admin-section-head strong {
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.admin-users {
+  max-height: 270px;
+  overflow: auto;
+}
+
+.admin-user.report-item {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.report-meta {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.report-reason {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.report-sub {
+  color: rgba(255,255,255,.58);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.report-details {
+  color: rgba(255,255,255,.84);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.admin-user-actions.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 760px) {
@@ -955,5 +1281,22 @@ body.is-grabbing #world {
 
   .block-search {
     width: 170px;
+  }
+
+  .sheet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sheet-card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .admin-user-actions.wrap {
+    justify-content: stretch;
+  }
+
+  .admin-user-actions.wrap .small-btn {
+    flex: 1 1 auto;
   }
 }

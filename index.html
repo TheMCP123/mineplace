@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=26" />
+  <link rel="stylesheet" href="/styles.css?v=27" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -84,14 +84,14 @@
   <div id="reportModal" class="sheet-modal hidden">
     <div class="sheet-card">
       <div class="sheet-head">
-        <strong>Report player</strong>
+        <strong>Report Player</strong>
         <button id="reportCloseBtn" class="small-btn" type="button">Close</button>
       </div>
 
       <div class="sheet-grid">
         <label class="sheet-label">
           <span>Username</span>
-          <input id="reportUsernameInput" class="admin-input" type="text" list="reportUsernames" placeholder="Username..." autocomplete="off" spellcheck="false" />
+          <input id="reportUsernameInput" class="admin-input" type="text" list="reportUsernames" placeholder="Discord username..." autocomplete="off" spellcheck="false" />
           <datalist id="reportUsernames"></datalist>
         </label>
 
@@ -108,14 +108,14 @@
 
         <label class="sheet-label full">
           <span>Extra details</span>
-          <textarea id="reportDetailsInput" class="admin-input admin-textarea" rows="4" placeholder="Optional details..."></textarea>
+          <textarea id="reportDetailsInput" class="admin-input admin-textarea" rows="4" placeholder="Explain what happened..."></textarea>
         </label>
       </div>
 
       <div id="reportContextNote" class="sheet-note">Manual report</div>
 
       <div class="sheet-actions">
-        <button id="reportSubmitBtn" class="small-btn primary" type="button">Send report</button>
+        <button id="reportSubmitBtn" class="small-btn primary" type="button">Send Report</button>
       </div>
     </div>
   </div>
@@ -160,7 +160,7 @@
 
       <div class="admin-section">
         <div class="admin-section-head">
-          <strong>Reports</strong>
+          <strong>Player Reports</strong>
           <button id="adminRefreshReportsBtn" class="small-btn" type="button">Refresh</button>
         </div>
         <div id="adminReports" class="admin-users"></div>
@@ -169,11 +169,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 26</div>
+    <div class="site-version">Version 27</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=26"></script>
+  <script src="/app.js?v=27"></script>
 </body>
 </html>

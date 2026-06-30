@@ -1047,7 +1047,7 @@ let soundUnlocked = false;
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
-let selectedBlock = BLOCK_DEFS[0]?.id || DEFAULT_GRID_BLOCK;
+let selectedBlock = DEFAULT_GRID_BLOCK;
 let filteredBlockDefs = [...BLOCK_DEFS];
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
@@ -1924,9 +1924,11 @@ function filterBlocks() {
 
   if (!filteredBlockDefs.some(block => block.id === selectedBlock) && filteredBlockDefs.length > 0) {
     selectedBlock = filteredBlockDefs[0].id;
+    updateCanvasCursor();
   }
 
   buildPalette();
+  updateCanvasCursor();
   searchReportUsernames("");
 }
 
@@ -1944,6 +1946,7 @@ function buildPalette() {
     item.type = "button";
     item.onclick = () => {
       selectedBlock = block.id;
+      updateCanvasCursor();
       document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
       item.classList.add("selected");
     };
@@ -1954,6 +1957,13 @@ function buildPalette() {
     img.width = 32;
     img.height = 32;
     img.loading = "eager";
+    img.onerror = () => {
+      if (block.id === CURSOR_TOOL_ID) {
+        img.remove();
+        item.textContent = "↖";
+        item.classList.add("tool-block");
+      }
+    };
     item.appendChild(img);
     paletteEl.appendChild(item);
   }
@@ -2112,7 +2122,7 @@ canvas.addEventListener('pointerdown', e => {
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
     canvas.setPointerCapture(e.pointerId);
-    document.body.classList.add('is-grabbing');
+    
     return;
   }
   if (e.button === 0) {
@@ -2134,7 +2144,7 @@ canvas.addEventListener('pointermove', e => {
 
 canvas.addEventListener('pointerup', () => {
   isPanning = false;
-  document.body.classList.remove('is-grabbing'); document.body.classList.remove('is-pan-ready');
+  
 });
 
 canvas.addEventListener('wheel', e => {
@@ -2153,21 +2163,21 @@ canvas.addEventListener('wheel', e => {
 window.addEventListener('keydown', e => {
   if (e.code === 'Space') {
     spaceDown = true;
-    document.body.classList.add('is-pan-ready');
+    
     e.preventDefault();
   }
 });
 window.addEventListener('keyup', e => {
   if (e.code === 'Space') {
     spaceDown = false;
-    document.body.classList.remove('is-grabbing'); document.body.classList.remove('is-pan-ready');
+    
   }
 });
 window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 26;
+const MINEPLACE_VERSION = 27;
 const CURSOR_TOOL_ID = "__cursor__";
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
@@ -2197,6 +2207,12 @@ const reportUsernamesEl = document.getElementById("reportUsernames");
 
 const adminReportsEl = document.getElementById("adminReports");
 const adminRefreshReportsBtnEl = document.getElementById("adminRefreshReportsBtn");
+
+
+function updateCanvasCursor() {
+  if (!canvas) return;
+  canvas.classList.toggle("cursor-inspect-tool", selectedBlock === CURSOR_TOOL_ID);
+}
 
 let inspectedBlockContext = null;
 let reportContext = null;
@@ -2264,6 +2280,7 @@ function buildPalette() {
     item.type = "button";
     item.onclick = () => {
       selectedBlock = block.id;
+      updateCanvasCursor();
       document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
       item.classList.add("selected");
     };
@@ -2274,6 +2291,13 @@ function buildPalette() {
     img.width = 32;
     img.height = 32;
     img.loading = "eager";
+    img.onerror = () => {
+      if (block.id === CURSOR_TOOL_ID) {
+        img.remove();
+        item.textContent = "↖";
+        item.classList.add("tool-block");
+      }
+    };
     item.appendChild(img);
     paletteEl.appendChild(item);
   }
@@ -2785,6 +2809,7 @@ adminRefreshReportsBtnEl?.addEventListener("click", adminLoadReports);
   await loadTextures();
   await initAuth();
   buildPalette();
+  updateCanvasCursor();
   searchReportUsernames("");
   resize();
   await loadVisibleBlocks();
