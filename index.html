@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mineplace Prototype</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <h1>Mineplace</h1>
+        <p>Прототип block-place canvas без базы данных</p>
+      </div>
+
+      <div class="stats">
+        <span id="coords">x: 0, y: 0</span>
+        <span id="zoomLabel">zoom: 1.00x</span>
+        <span id="cooldownLabel">ready</span>
+      </div>
+    </header>
+
+    <main class="stage-wrap">
+      <canvas id="world"></canvas>
+
+      <div class="help">
+        <b>Управление:</b>
+        <span>ЛКМ — поставить блок</span>
+        <span>ПКМ/средняя кнопка/Space + drag — двигать карту</span>
+        <span>Колесо — zoom</span>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Блоки</h2>
+        <div id="palette" class="palette"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Карта</h2>
+        <button id="centerBtn">В центр</button>
+        <button id="exportBtn">Экспорт JSON</button>
+        <label class="file-btn">
+          Импорт JSON
+          <input id="importInput" type="file" accept="application/json" />
+        </label>
+        <button id="resetBtn" class="danger">Очистить локально</button>
+      </section>
+
+      <section class="panel small">
+        <h2>Пока без базы</h2>
+        <p>
+          Сейчас карта сохраняется в браузере. Потом вместо localStorage подключим API:
+          <code>POST /api/place-block</code> и <code>GET /api/chunks</code>.
+        </p>
+      </section>
+    </aside>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
