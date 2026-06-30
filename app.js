@@ -12,6 +12,9 @@ const blockCountEl = document.getElementById("blockCount");
 const inventorySliderEl = document.getElementById("inventorySlider");
 const viewMapBtnEl = document.getElementById("viewMapBtn");
 const downloadMapBtnEl = document.getElementById("downloadMapBtn");
+const onlineBubbleEl = document.getElementById("onlineBubble");
+const onlineCountEl = document.getElementById("onlineCount");
+const onlineListEl = document.getElementById("onlineList");
 const adminModalEl = document.getElementById("adminModal");
 const adminSearchInputEl = document.getElementById("adminSearchInput");
 const adminSearchBtnEl = document.getElementById("adminSearchBtn");
@@ -711,6 +714,7 @@ let currentUser = null;
 let currentProfile = null;
 let selectedAdminUser = null;
 let realtimeChannel = null;
+let onlineChannel = null;
 let isPlacing = false;
 let toastTimer = null;
 let exportInProgress = false;
@@ -1061,6 +1065,114 @@ adminBanForeverBtnEl?.addEventListener("click", () => adminBanUser(null));
 adminUnbanBtnEl?.addEventListener("click", adminUnbanUser);
 
 
+
+function renderOnlinePlayers(players) {
+  if (!onlineBubbleEl || !onlineCountEl || !onlineListEl) return;
+
+  if (!currentUser) {
+    onlineBubbleEl.classList.add("hidden");
+    onlineCountEl.textContent = "0 online";
+    onlineListEl.innerHTML = "";
+    return;
+  }
+
+  const unique = new Map();
+
+  for (const player of players) {
+    if (!player?.user_id) continue;
+    if (!unique.has(player.user_id)) {
+      unique.set(player.user_id, player);
+    }
+  }
+
+  const list = [...unique.values()]
+    .filter(player => player.username)
+    .sort((a, b) => String(a.username).localeCompare(String(b.username)));
+
+  onlineBubbleEl.classList.remove("hidden");
+  onlineCountEl.textContent = `${list.length} online`;
+
+  if (!list.length) {
+    onlineListEl.innerHTML = '<div class="admin-note">Nobody online.</div>';
+    return;
+  }
+
+  onlineListEl.innerHTML = "";
+
+  for (const player of list) {
+    const item = document.createElement("div");
+    item.className = "online-player";
+
+    const avatar = player.avatar_url
+      ? `<img src="${player.avatar_url}" alt="">`
+      : `<div class="online-avatar-fallback">${escapeHtml(String(player.username || "?").slice(0, 1).toUpperCase())}</div>`;
+
+    item.innerHTML = `
+      ${avatar}
+      <span>${escapeHtml(player.username)}</span>
+    `;
+
+    onlineListEl.appendChild(item);
+  }
+}
+
+function updateOnlineFromPresence() {
+  if (!onlineChannel) {
+    renderOnlinePlayers([]);
+    return;
+  }
+
+  const state = onlineChannel.presenceState();
+  const players = Object.values(state).flat();
+  renderOnlinePlayers(players);
+}
+
+function stopOnlinePresence() {
+  if (onlineChannel && supabaseClient) {
+    supabaseClient.removeChannel(onlineChannel);
+  }
+
+  onlineChannel = null;
+  renderOnlinePlayers([]);
+}
+
+function startOnlinePresence() {
+  if (!supabaseClient || !currentUser) {
+    stopOnlinePresence();
+    return;
+  }
+
+  stopOnlinePresence();
+
+  const profile = getDiscordProfile(currentUser);
+
+  onlineChannel = supabaseClient.channel("mineplace-online", {
+    config: {
+      presence: {
+        key: currentUser.id
+      }
+    }
+  });
+
+  onlineChannel
+    .on("presence", { event: "sync" }, updateOnlineFromPresence)
+    .on("presence", { event: "join" }, updateOnlineFromPresence)
+    .on("presence", { event: "leave" }, updateOnlineFromPresence)
+    .subscribe(async status => {
+      if (status !== "SUBSCRIBED") return;
+
+      await onlineChannel.track({
+        user_id: currentUser.id,
+        username: profile.username,
+        avatar_url: profile.avatar_url,
+        online_at: new Date().toISOString()
+      });
+
+      updateOnlineFromPresence();
+    });
+}
+
+
 function renderAuth() {
   if (!authBox) return;
   if (!supabaseClient) {
@@ -1104,6 +1216,7 @@ async function logout() {
   await supabaseClient.auth.signOut();
   currentUser = null;
   currentProfile = null;
+  stopOnlinePresence();
   renderAuth();
   playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null });
   renderBlocks();
@@ -1122,6 +1235,7 @@ async function initAuth() {
     await loadCurrentProfile();
   }
   renderAuth();
+  startOnlinePresence();
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
@@ -1133,6 +1247,13 @@ async function initAuth() {
       currentProfile = null;
     }
     renderAuth();
+
+    if (currentUser) {
+      startOnlinePresence();
+    } else {
+      stopOnlinePresence();
+    }
+
     renderBlocks();
   });
 }
