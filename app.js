@@ -1,3 +1,13 @@
+const SUPABASE_URL = "https://ybfgmotbrlhmzlaxfyaq.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bjnUPSDIi8yQdnzvMxhCJg_mlVczei7";
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+if (!supabaseClient) {
+  console.warn("Supabase SDK не загрузился.");
+} else {
+  console.log("Supabase подключён:", SUPABASE_URL);
+}
+
 const canvas = document.getElementById("world");
 const ctx = canvas.getContext("2d", { alpha: false });
 
@@ -5,6 +15,13 @@ const paletteEl = document.getElementById("palette");
 const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
 const cooldownLabel = document.getElementById("cooldownLabel");
+
+const supabaseStatusLabel = document.createElement("span");
+supabaseStatusLabel.id = "supabaseStatus";
+supabaseStatusLabel.textContent = supabaseClient ? "db: connected" : "db: offline";
+supabaseStatusLabel.style.color = supabaseClient ? "#7bd88f" : "#ff6b6b";
+document.querySelector(".stats")?.appendChild(supabaseStatusLabel);
+
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
@@ -85,6 +102,31 @@ function getTexture(blockId) {
 
 function key(x, y) {
   return `${x},${y}`;
+}
+
+
+async function loadFromDatabase() {
+  if (!supabaseClient) return false;
+
+  const { data, error } = await supabaseClient
+    .from("placed_blocks")
+    .select("x,y,block_id")
+    .limit(5000);
+
+  if (error) {
+    console.warn("База пока не отдала блоки:", error.message);
+    return false;
+  }
+
+  if (!Array.isArray(data)) return false;
+
+  for (const item of data) {
+    if (Number.isInteger(item.x) && Number.isInteger(item.y) && BLOCKS[item.block_id]) {
+      placed.set(key(item.x, item.y), item.block_id);
+    }
+  }
+
+  return true;
 }
 
 function loadLocal() {
@@ -341,7 +383,13 @@ document.getElementById("resetBtn").onclick = () => {
 
 window.addEventListener("resize", resize);
 
-loadLocal();
-buildPalette();
-resize();
-setInterval(draw, 1000);
+(async function init() {
+  const loadedFromDb = await loadFromDatabase();
+  if (!loadedFromDb) {
+    loadLocal();
+  }
+
+  buildPalette();
+  resize();
+  setInterval(draw, 1000);
+})();
