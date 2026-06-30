@@ -1,4 +1,27 @@
-/*
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-*/
+# Mineplace cache stability
+# HTML must always revalidate, so users receive the newest deploy.
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Core app files must revalidate too, because this project updates often.
+/app.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/styles.css
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Textures and sound can be cached shortly, but must still revalidate soon.
+/textures/*
+  Cache-Control: public, max-age=300, must-revalidate
+
+/place.mp3
+  Cache-Control: public, max-age=300, must-revalidate
+
+/favicon.ico
+  Cache-Control: public, max-age=300, must-revalidate
+
+/favicon.png
+  Cache-Control: public, max-age=300, must-revalidate
