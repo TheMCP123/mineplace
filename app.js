@@ -2229,7 +2229,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 30;
+const MINEPLACE_VERSION = 31;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
@@ -2822,6 +2822,207 @@ reportSubmitBtnEl?.addEventListener("click", submitReport);
 reportUsernameInputEl?.addEventListener("input", queueSearchReportUsernames);
 adminRefreshReportsBtnEl?.addEventListener("click", adminLoadReports);
 
+
+
+/* Version 31 critical stable overrides */
+
+function renderAuth() {
+  if (!authBox) return;
+
+  if (!supabaseClient) {
+    authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
+    return;
+  }
+
+  if (!currentUser) {
+    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
+    document.getElementById("loginBtn")?.addEventListener("click", loginWithDiscord);
+    return;
+  }
+
+  const profile = getDiscordProfile(currentUser);
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
+
+  authBox.innerHTML = `
+    <div class="auth-user">
+      ${avatar}
+      <span>${escapeHtml(profile.username)}</span>
+    </div>
+    ${adminButton}
+    <button id="logoutBtn">Logout</button>
+  `;
+
+  document.getElementById("adminBtn")?.addEventListener("click", openAdminPanel);
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+}
+
+function buildPalette() {
+  if (!paletteEl) return;
+  paletteEl.innerHTML = "";
+
+  const safeBlocks = filteredBlockDefs.filter(block => block && block.id && block.src && !block.isTool && block.id !== "__cursor__");
+
+  if (blockCountEl) {
+    blockCountEl.textContent = `${safeBlocks.length} blocks`;
+  }
+
+  if (!safeBlocks.some(block => block.id === selectedBlock)) {
+    selectedBlock = safeBlocks[0]?.id || DEFAULT_GRID_BLOCK;
+  }
+
+  for (const block of safeBlocks) {
+    const item = document.createElement("button");
+    item.className = "block" + (block.id === selectedBlock ? " selected" : "");
+    item.title = block.name;
+    item.type = "button";
+
+    item.onclick = () => {
+      selectedBlock = block.id;
+      document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
+      item.classList.add("selected");
+    };
+
+    const img = document.createElement("img");
+    img.src = block.src;
+    img.alt = block.name;
+    img.width = 32;
+    img.height = 32;
+    img.loading = "eager";
+    item.appendChild(img);
+
+    paletteEl.appendChild(item);
+  }
+
+  requestAnimationFrame(() => {
+    paletteEl.scrollLeft = 0;
+    updateInventorySlider();
+  });
+}
+
+function filterBlocks() {
+  const query = normalizeSearch(blockSearchEl?.value || "");
+
+  const baseBlocks = BLOCK_DEFS.filter(block => block && block.id !== "__cursor__" && !block.isTool);
+
+  filteredBlockDefs = !query
+    ? [...baseBlocks]
+    : baseBlocks.filter(block => {
+        const id = String(block.id || "").toLowerCase();
+        const name = String(block.name || "").toLowerCase().replaceAll(" ", "_");
+        return id.includes(query) || name.includes(query);
+      });
+
+  if (!filteredBlockDefs.some(block => block.id === selectedBlock) && filteredBlockDefs.length > 0) {
+    selectedBlock = filteredBlockDefs[0].id;
+  }
+
+  buildPalette();
+}
+
+async function inspectBlock(tileX, tileY) {
+  if (!supabaseClient) return;
+  if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  const blockId = placed.get(key(tileX, tileY));
+  if (!blockId) {
+    showToast("Nobody yet");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc("get_block_owner", {
+    p_x: tileX,
+    p_y: tileY
+  });
+
+  if (error || !data?.exists) {
+    showToast("Nobody yet");
+    return;
+  }
+
+  openInspectModal(data, tileX, tileY);
+}
+
+async function loadPlayerState() {
+  if (!supabaseClient || !currentUser) {
+    renderBlocks();
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc("get_player_state");
+
+  if (error || !data?.success) {
+    console.warn("get_player_state failed", error, data);
+    return;
+  }
+
+  playerState = normalizePlayerState(data.state);
+  renderBlocks();
+}
+
+async function placeAt(tileX, tileY) {
+  if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
+  if (currentBlock === selectedBlock) {
+    showToast("Already placed");
+    return;
+  }
+
+  if (!currentUser) {
+    showToast("Login required");
+    return;
+  }
+
+  if (isPlacing) return;
+  isPlacing = true;
+
+  const { data, error } = await supabaseClient.rpc("place_block", {
+    p_x: tileX,
+    p_y: tileY,
+    p_block_id: selectedBlock
+  });
+
+  isPlacing = false;
+
+  if (error) {
+    console.error("place_block error", error);
+    showToast("Could not place block");
+    return;
+  }
+
+  if (!data?.success) {
+    const code = data?.error || "error";
+
+    if (code === "no_blocks") {
+      if (data.state) playerState = normalizePlayerState(data.state);
+      renderBlocks();
+      showToast("No blocks");
+      return;
+    }
+
+    if (code === "user_banned") {
+      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : "Account banned");
+      return;
+    }
+
+    showToast(String(code).replaceAll("_", " "));
+    return;
+  }
+
+  if (data.block?.block_id) {
+    placed.set(key(data.block.x, data.block.y), data.block.block_id);
+    addPlacementAnimation?.(data.block.x, data.block.y);
+  }
+
+  if (!data.no_change) {
+    playPlaceSound();
+  }
+
+  if (data.state) playerState = normalizePlayerState(data.state);
+  renderBlocks();
+  scheduleDraw();
+}
 
 (async function init() {
   await loadTextures();

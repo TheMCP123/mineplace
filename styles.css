@@ -1632,3 +1632,10 @@ textarea,
 .sheet-card {
   background: linear-gradient(180deg, rgba(44, 78, 35, .96), rgba(28, 52, 24, .96)) !important;
 }
+
+/* Version 31 critical */
+.block-search {
+  background: rgba(19, 38, 16, .92) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+.block-search::placeholder { color: rgba(255,255,255,.45) !important; }
