@@ -20,6 +20,7 @@ html, body {
 
 #world {
   width: 100vw;
+  touch-action: none;
   height: 100vh;
   display: block;
   cursor: crosshair;
@@ -44,6 +45,7 @@ button:hover {
 
 .hud {
   position: fixed;
+  will-change: transform;
   z-index: 12;
   border: 1px solid var(--line);
   background: var(--glass);
@@ -476,18 +478,24 @@ button:hover {
 
 
 .map-actions {
-  right: 14px;
-  bottom: 112px;
+  left: 14px;
+  bottom: 16px;
   display: flex;
   gap: 8px;
   padding: 6px;
   border-radius: 999px;
+  z-index: 14;
+}
+
+.map-actions .small-btn {
+  padding: 9px 12px;
+  font-size: 12px;
 }
 
 @media (max-width: 760px) {
   .map-actions {
-    right: 10px;
-    bottom: 154px;
+    left: 10px;
+    bottom: 82px;
     flex-direction: column;
     border-radius: 18px;
   }

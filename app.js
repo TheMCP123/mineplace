@@ -693,6 +693,7 @@ const LEGACY_BLOCKS = {
 const BLOCKS = new Map(BLOCK_DEFS.map(block => [block.id, block]));
 const textureCache = new Map();
 const fallbackTextureCache = new Map();
+let texturesLoadPromise = null;
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -707,6 +708,7 @@ let selectedAdminUser = null;
 let realtimeChannel = null;
 let isPlacing = false;
 let toastTimer = null;
+let exportInProgress = false;
 
 let playerState = normalizePlayerState({
   blocks: 0,
@@ -1104,10 +1106,18 @@ function renderBlocks() {
 }
 
 async function loadTextures() {
-  await Promise.all(BLOCK_DEFS.map(loadTexture));
+  if (!texturesLoadPromise) {
+    texturesLoadPromise = Promise.all(BLOCK_DEFS.map(loadTexture));
+  }
+
+  await texturesLoadPromise;
 }
 
 function loadTexture(block) {
+  if (textureCache.has(block.id)) {
+    return Promise.resolve(textureCache.get(block.id));
+  }
+
   return new Promise((resolve) => {
     const img = new Image();
     img.decoding = 'async';
@@ -1432,6 +1442,10 @@ paletteEl?.addEventListener("scroll", updateInventorySlider);
 window.addEventListener("resize", updateInventorySlider);
 
 
+function nextFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
 async function getAllMapBlocksForExport() {
   if (!supabaseClient) return [];
 
@@ -1451,39 +1465,65 @@ async function getAllMapBlocksForExport() {
 }
 
 async function createMapPngBlob() {
-  showToast("Rendering map...");
+  if (exportInProgress) return null;
+  exportInProgress = true;
 
-  await loadTextures();
+  if (viewMapBtnEl) viewMapBtnEl.disabled = true;
+  if (downloadMapBtnEl) downloadMapBtnEl.disabled = true;
 
-  const rows = await getAllMapBlocksForExport();
-  const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = MAP_SIZE * TILE_SIZE;
-  exportCanvas.height = MAP_SIZE * TILE_SIZE;
+  try {
+    showToast("Rendering map...");
 
-  const exportCtx = exportCanvas.getContext("2d", { alpha: false });
-  exportCtx.imageSmoothingEnabled = false;
+    await loadTextures();
 
-  const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
+    const rows = await getAllMapBlocksForExport();
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = MAP_SIZE * TILE_SIZE;
+    exportCanvas.height = MAP_SIZE * TILE_SIZE;
 
-  for (let y = 0; y < MAP_SIZE; y++) {
-    for (let x = 0; x < MAP_SIZE; x++) {
-      if (defaultTexture) {
-        exportCtx.drawImage(defaultTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    const exportCtx = exportCanvas.getContext("2d", {
+      alpha: false,
+      willReadFrequently: false
+    });
+
+    exportCtx.imageSmoothingEnabled = false;
+
+    const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
+
+    for (let y = 0; y < MAP_SIZE; y++) {
+      for (let x = 0; x < MAP_SIZE; x++) {
+        if (defaultTexture) {
+          exportCtx.drawImage(defaultTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+      }
+
+      if (y % 25 === 0) {
+        await nextFrame();
       }
     }
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      if (!Number.isInteger(row.x) || !Number.isInteger(row.y)) continue;
+      if (row.x < 0 || row.y < 0 || row.x >= MAP_SIZE || row.y >= MAP_SIZE) continue;
+
+      const texture = resolveTextureAsset(row.block_id);
+      if (!texture) continue;
+
+      exportCtx.drawImage(texture, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+      if (i % 2000 === 0) {
+        await nextFrame();
+      }
+    }
+
+    return await new Promise(resolve => exportCanvas.toBlob(resolve, "image/png"));
+  } finally {
+    exportInProgress = false;
+    if (viewMapBtnEl) viewMapBtnEl.disabled = false;
+    if (downloadMapBtnEl) downloadMapBtnEl.disabled = false;
   }
-
-  for (const row of rows) {
-    if (!Number.isInteger(row.x) || !Number.isInteger(row.y)) continue;
-    if (row.x < 0 || row.y < 0 || row.x >= MAP_SIZE || row.y >= MAP_SIZE) continue;
-
-    const texture = resolveTextureAsset(row.block_id);
-    if (!texture) continue;
-
-    exportCtx.drawImage(texture, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-  }
-
-  return await new Promise(resolve => exportCanvas.toBlob(resolve, "image/png"));
 }
 
 async function downloadMapPng() {
