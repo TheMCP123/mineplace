@@ -40,6 +40,8 @@ const blocksFill = document.getElementById("blocksFill");
 const MAP_SIZE = 500;
 const TILE_SIZE = 16;
 const DEFAULT_GRID_BLOCK = "grass_top";
+const PLACE_SOUND_SRC = "/place.mp3";
+const PLACE_SOUND_POOL_SIZE = 6;
 
 const BLOCK_DEFS = [
   {
@@ -694,6 +696,9 @@ const BLOCKS = new Map(BLOCK_DEFS.map(block => [block.id, block]));
 const textureCache = new Map();
 const fallbackTextureCache = new Map();
 let texturesLoadPromise = null;
+let placeSoundPool = [];
+let placeSoundIndex = 0;
+let soundUnlocked = false;
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -743,6 +748,70 @@ function scheduleDraw() {
     draw();
   });
 }
+
+
+function initPlaceSound() {
+  if (placeSoundPool.length) return;
+
+  placeSoundPool = Array.from({ length: PLACE_SOUND_POOL_SIZE }, () => {
+    const audio = new Audio(PLACE_SOUND_SRC);
+    audio.preload = "auto";
+    audio.volume = 0.55;
+    return audio;
+  });
+}
+
+function unlockPlaceSound() {
+  if (soundUnlocked) return;
+
+  initPlaceSound();
+  soundUnlocked = true;
+
+  const audio = placeSoundPool[0];
+  if (!audio) return;
+
+  audio.muted = true;
+  audio.currentTime = 0;
+
+  const playPromise = audio.play();
+
+  if (playPromise?.then) {
+    playPromise
+      .then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+      })
+      .catch(() => {
+        audio.muted = false;
+      });
+  } else {
+    audio.muted = false;
+  }
+}
+
+function playPlaceSound() {
+  initPlaceSound();
+
+  const audio = placeSoundPool[placeSoundIndex % placeSoundPool.length];
+  placeSoundIndex++;
+
+  if (!audio) return;
+
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+
+    const playPromise = audio.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {});
+    }
+  } catch {
+    // Ignore audio errors. Block placement should never fail because of sound.
+  }
+}
+
 
 function showToast(message) {
   let el = document.querySelector('.toast');
@@ -1353,9 +1422,14 @@ async function placeAt(tileX, tileY) {
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
   }
+
+  if (!data.no_change) {
+    playPlaceSound();
+  }
+
   if (data.state) playerState = normalizePlayerState(data.state);
   renderBlocks();
-  draw();
+  scheduleDraw();
 }
 
 function normalizeSearch(value) {
@@ -1566,6 +1640,7 @@ downloadMapBtnEl?.addEventListener("click", downloadMapPng);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 canvas.addEventListener('pointerdown', e => {
+  unlockPlaceSound();
   const shouldPan = e.button === 1 || e.button === 2 || spaceDown;
   if (shouldPan) {
     isPanning = true;
