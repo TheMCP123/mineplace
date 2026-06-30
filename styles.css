@@ -643,7 +643,7 @@ button:hover {
 
 
 
-/* Version 25 */
+/* Version 26 */
 .site-meta {
   position: fixed;
   right: 12px;
@@ -881,5 +881,79 @@ body.is-grabbing #world {
 @media (max-width: 760px) {
   .sheet-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* Version 26 emergency UI fixes */
+.hud-auth {
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+}
+
+.inventory-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 8px;
+}
+
+.block-search {
+  width: 220px;
+  max-width: 45vw;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.92);
+  color: #111;
+  outline: none;
+}
+
+.block-search:focus {
+  box-shadow: 0 0 0 3px rgba(123,216,143,.28);
+}
+
+body,
+#world {
+  cursor: url('/ui/cursor_default.png') 4 4, auto;
+}
+
+button,
+.small-btn,
+.block,
+input[type="button"],
+input[type="range"],
+input[type="checkbox"],
+select,
+summary {
+  cursor: url('/ui/cursor_pointer.png') 4 4, pointer;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+.admin-input,
+.admin-textarea {
+  cursor: url('/ui/cursor_text.png') 8 14, text;
+}
+
+body.is-grabbing,
+body.is-grabbing #world {
+  cursor: url('/ui/cursor_grab.png') 8 8, grabbing !important;
+}
+
+@media (max-width: 760px) {
+  .hud-auth {
+    top: 10px;
+    right: 10px;
+  }
+
+  .block-search {
+    width: 170px;
   }
 }

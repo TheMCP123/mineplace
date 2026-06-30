@@ -2167,7 +2167,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 25;
+const MINEPLACE_VERSION = 26;
 const CURSOR_TOOL_ID = "__cursor__";
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
