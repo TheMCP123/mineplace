@@ -1082,6 +1082,7 @@ function normalizePlayerState(state) {
 
 
 const placed = new Map();
+const placementAnimations = new Map();
 
 
 let drawQueued = false;
@@ -1093,6 +1094,39 @@ function scheduleDraw() {
     drawQueued = false;
     draw();
   });
+}
+
+
+
+function addPlacementAnimation(tileX, tileY, blockId) {
+  placementAnimations.set(key(tileX, tileY), {
+    x: tileX,
+    y: tileY,
+    block_id: blockId,
+    started_at: performance.now()
+  });
+  scheduleDraw();
+}
+
+function getPlacementAnimationScale(tileKey) {
+  const anim = placementAnimations.get(tileKey);
+  if (!anim) return 1;
+
+  const duration = 220;
+  const elapsed = performance.now() - anim.started_at;
+  const t = Math.max(0, Math.min(1, elapsed / duration));
+
+  if (t >= 1) {
+    placementAnimations.delete(tileKey);
+    return 1;
+  }
+
+  // Smooth pop: starts small, grows a bit over, then settles.
+  const eased = 1 - Math.pow(1 - t, 3);
+  const overshoot = Math.sin(t * Math.PI) * 0.08;
+  scheduleDraw();
+
+  return Math.min(1.08, 0.28 + eased * 0.72 + overshoot);
 }
 
 
@@ -1854,13 +1888,16 @@ async function placeAt(tileX, tileY) {
     showToast('Login required');
     return;
   }
+
   if (isPlacing) return;
   isPlacing = true;
+
   const { data, error } = await supabaseClient.rpc('place_block', {
     p_x: tileX,
     p_y: tileY,
     p_block_id: selectedBlock
   });
+
   isPlacing = false;
 
   if (error) {
@@ -1876,16 +1913,19 @@ async function placeAt(tileX, tileY) {
       showToast('No blocks');
       return;
     }
+
     if (code === 'user_banned') {
       showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : 'Account banned');
       return;
     }
+
     showToast(code.replaceAll('_', ' '));
     return;
   }
 
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
+    addPlacementAnimation(data.block.x, data.block.y, data.block.block_id);
   }
 
   if (!data.no_change) {
@@ -1924,11 +1964,9 @@ function filterBlocks() {
 
   if (!filteredBlockDefs.some(block => block.id === selectedBlock) && filteredBlockDefs.length > 0) {
     selectedBlock = filteredBlockDefs[0].id;
-    updateCanvasCursor();
   }
 
   buildPalette();
-  updateCanvasCursor();
   searchReportUsernames("");
 }
 
@@ -1946,7 +1984,6 @@ function buildPalette() {
     item.type = "button";
     item.onclick = () => {
       selectedBlock = block.id;
-      updateCanvasCursor();
       document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
       item.classList.add("selected");
     };
@@ -1957,13 +1994,6 @@ function buildPalette() {
     img.width = 32;
     img.height = 32;
     img.loading = "eager";
-    img.onerror = () => {
-      if (block.id === CURSOR_TOOL_ID) {
-        img.remove();
-        item.textContent = "↖";
-        item.classList.add("tool-block");
-      }
-    };
     item.appendChild(img);
     paletteEl.appendChild(item);
   }
@@ -2113,11 +2143,15 @@ viewMapBtnEl?.addEventListener("click", viewMapPng);
 downloadMapBtnEl?.addEventListener("click", downloadMapPng);
 
 
-canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const t = screenToTile(e.clientX, e.clientY);
+  inspectBlock(t.x, t.y);
+});
 
 canvas.addEventListener('pointerdown', e => {
   unlockPlaceSound();
-  const shouldPan = e.button === 1 || e.button === 2 || spaceDown;
+  const shouldPan = e.button === 1 || spaceDown;
   if (shouldPan) {
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
@@ -2177,13 +2211,11 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 27;
-const CURSOR_TOOL_ID = "__cursor__";
+const MINEPLACE_VERSION = 28;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Harassment",
   "Offensive Text",
-  "Spam / Griefing",
   "Other"
 ];
 
@@ -2209,29 +2241,9 @@ const adminReportsEl = document.getElementById("adminReports");
 const adminRefreshReportsBtnEl = document.getElementById("adminRefreshReportsBtn");
 
 
-function updateCanvasCursor() {
-  if (!canvas) return;
-  canvas.classList.toggle("cursor-inspect-tool", selectedBlock === CURSOR_TOOL_ID);
-}
-
 let inspectedBlockContext = null;
 let reportContext = null;
 let reportSearchTimer = null;
-
-(function ensureCursorTool() {
-  if (!Array.isArray(BLOCK_DEFS)) return;
-  if (!BLOCK_DEFS.some(block => block.id === CURSOR_TOOL_ID)) {
-    BLOCK_DEFS.unshift({
-      id: CURSOR_TOOL_ID,
-      name: "Cursor",
-      src: "/textures/cursor_tool.png",
-      sort_order: 0,
-      isTool: true
-    });
-  }
-
-  filteredBlockDefs = [...BLOCK_DEFS];
-})();
 
 function renderAuth() {
   if (!authBox) return;
@@ -2275,12 +2287,11 @@ function buildPalette() {
 
   for (const block of filteredBlockDefs) {
     const item = document.createElement("button");
-    item.className = "block" + (block.id === selectedBlock ? " selected" : "") + (block.isTool ? " tool-block" : "");
+    item.className = "block" + (block.id === selectedBlock ? " selected" : "");
     item.title = block.name;
     item.type = "button";
     item.onclick = () => {
       selectedBlock = block.id;
-      updateCanvasCursor();
       document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
       item.classList.add("selected");
     };
@@ -2809,7 +2820,6 @@ adminRefreshReportsBtnEl?.addEventListener("click", adminLoadReports);
   await loadTextures();
   await initAuth();
   buildPalette();
-  updateCanvasCursor();
   searchReportUsernames("");
   resize();
   await loadVisibleBlocks();
