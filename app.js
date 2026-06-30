@@ -2,25 +2,19 @@ const SUPABASE_URL = "https://ybfgmotbrlhmzlaxfyaq.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bjnUPSDIi8yQdnzvMxhCJg_mlVczei7";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-if (!supabaseClient) {
-  console.warn("Supabase SDK failed to load.");
-} else {
-  console.log("Supabase connected:", SUPABASE_URL);
-}
-
 const canvas = document.getElementById("world");
 const ctx = canvas.getContext("2d", { alpha: false });
 
 const paletteEl = document.getElementById("palette");
 const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
-const cooldownLabel = document.getElementById("cooldownLabel");
 const authBox = document.getElementById("authBox");
+const splashesLabel = document.getElementById("splashesLabel");
+const rechargeLabel = document.getElementById("rechargeLabel");
+const splashFill = document.getElementById("splashFill");
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
-const CHUNK_SIZE = 32;
-const FALLBACK_COOLDOWN_MS = 2000;
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -28,10 +22,17 @@ let selectedBlock = "grass";
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
 let spaceDown = false;
-let lastPlaceAt = Number(localStorage.getItem("mineplace:lastPlaceAt") || 0);
 let currentUser = null;
 let realtimeChannel = null;
 let isPlacing = false;
+let toastTimer = null;
+
+let playerState = {
+  splashes: 0,
+  splash_capacity: 50,
+  recharge_seconds: 30,
+  next_splash_at: null
+};
 
 const placed = new Map();
 
@@ -56,11 +57,21 @@ const BLOCKS = {
 
 const textureCanvases = new Map();
 
-const supabaseStatusLabel = document.createElement("span");
-supabaseStatusLabel.id = "supabaseStatus";
-supabaseStatusLabel.textContent = supabaseClient ? "db: connected" : "db: offline";
-supabaseStatusLabel.style.color = supabaseClient ? "#7bd88f" : "#ff6b6b";
-document.querySelector(".stats")?.appendChild(supabaseStatusLabel);
+function showToast(message) {
+  let el = document.querySelector(".toast");
+
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "toast";
+    document.body.appendChild(el);
+  }
+
+  el.textContent = message;
+  el.classList.add("show");
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
 
 function rand(seed) {
   let t = seed + 0x6D2B79F5;
@@ -136,17 +147,13 @@ async function ensureProfile(sessionUser) {
 
   const profile = getDiscordProfile(sessionUser);
 
-  const { error } = await supabaseClient
+  await supabaseClient
     .from("profiles")
     .upsert({
       id: sessionUser.id,
       username: profile.username,
       avatar_url: profile.avatar_url
     }, { onConflict: "id" });
-
-  if (error) {
-    console.warn("Failed to create/update profile:", error.message);
-  }
 }
 
 function renderAuth() {
@@ -190,7 +197,7 @@ async function loginWithDiscord() {
   });
 
   if (error) {
-    alert("Discord login error: " + error.message);
+    showToast("Discord login failed");
   }
 }
 
@@ -199,6 +206,8 @@ async function logout() {
   await supabaseClient.auth.signOut();
   currentUser = null;
   renderAuth();
+  playerState = { splashes: 0, splash_capacity: 50, recharge_seconds: 30, next_splash_at: null };
+  renderSplashes();
 }
 
 async function initAuth() {
@@ -207,12 +216,7 @@ async function initAuth() {
     return;
   }
 
-  const { data, error } = await supabaseClient.auth.getSession();
-
-  if (error) {
-    console.warn("Auth session error:", error.message);
-  }
-
+  const { data } = await supabaseClient.auth.getSession();
   currentUser = data?.session?.user || null;
 
   if (currentUser) {
@@ -226,17 +230,60 @@ async function initAuth() {
 
     if (currentUser) {
       await ensureProfile(currentUser);
+      await loadPlayerState();
     }
 
     renderAuth();
+    renderSplashes();
   });
 }
 
-async function loadVisibleBlocks() {
-  if (!supabaseClient) {
-    loadLocal();
+async function loadPlayerState() {
+  if (!supabaseClient || !currentUser) {
+    renderSplashes();
     return;
   }
+
+  const { data, error } = await supabaseClient.rpc("get_player_state");
+
+  if (error || !data?.success) {
+    return;
+  }
+
+  playerState = data.state;
+  renderSplashes();
+}
+
+function getRechargeRemainingSeconds() {
+  if (!playerState.next_splash_at) return 0;
+  const readyAt = new Date(playerState.next_splash_at).getTime();
+  return Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
+}
+
+function renderSplashes() {
+  const current = playerState.splashes ?? 0;
+  const capacity = playerState.splash_capacity ?? 50;
+  const percent = capacity > 0 ? Math.max(0, Math.min(100, (current / capacity) * 100)) : 0;
+
+  splashesLabel.textContent = `Splashes ${current}/${capacity}`;
+  splashFill.style.width = `${percent}%`;
+
+  if (!currentUser) {
+    rechargeLabel.textContent = "Login required";
+    return;
+  }
+
+  if (current >= capacity) {
+    rechargeLabel.textContent = "Full";
+    return;
+  }
+
+  const left = getRechargeRemainingSeconds();
+  rechargeLabel.textContent = left > 0 ? `+1 in ${left}s` : "Recharging";
+}
+
+async function loadVisibleBlocks() {
+  if (!supabaseClient) return;
 
   const { data, error } = await supabaseClient.rpc("get_visible_blocks", {
     p_min_x: 0,
@@ -245,11 +292,7 @@ async function loadVisibleBlocks() {
     p_max_y: MAP_SIZE - 1
   });
 
-  if (error) {
-    console.warn("Failed to load blocks from database:", error.message);
-    loadLocal();
-    return;
-  }
+  if (error) return;
 
   placed.clear();
 
@@ -260,32 +303,6 @@ async function loadVisibleBlocks() {
       placed.set(key(row.x, row.y), row.block_id);
     }
   }
-
-  console.log(`Loaded ${rows.length} blocks from database.`);
-}
-
-function loadLocal() {
-  try {
-    const raw = localStorage.getItem("mineplace:map");
-    if (!raw) return;
-    const arr = JSON.parse(raw);
-    for (const item of arr) {
-      if (Number.isInteger(item.x) && Number.isInteger(item.y) && BLOCKS[item.block]) {
-        placed.set(key(item.x, item.y), item.block);
-      }
-    }
-  } catch {
-    console.warn("Failed to load localStorage map");
-  }
-}
-
-function saveLocal() {
-  const arr = [];
-  for (const [k, block] of placed.entries()) {
-    const [x, y] = k.split(",").map(Number);
-    arr.push({ x, y, block });
-  }
-  localStorage.setItem("mineplace:map", JSON.stringify(arr));
 }
 
 function subscribeToRealtime() {
@@ -314,9 +331,7 @@ function subscribeToRealtime() {
         draw();
       }
     )
-    .subscribe(status => {
-      console.log("Realtime status:", status);
-    });
+    .subscribe();
 }
 
 function resize() {
@@ -380,10 +395,12 @@ function drawGrid(viewW, viewH) {
       ctx.moveTo(x * TILE_SIZE, startY * TILE_SIZE);
       ctx.lineTo(x * TILE_SIZE, (endY + 1) * TILE_SIZE);
     }
+
     for (let y = startY; y <= endY + 1; y++) {
       ctx.moveTo(startX * TILE_SIZE, y * TILE_SIZE);
       ctx.lineTo((endX + 1) * TILE_SIZE, y * TILE_SIZE);
     }
+
     ctx.stroke();
   }
 
@@ -411,103 +428,63 @@ function draw() {
 
   ctx.restore();
 
-  zoomLabel.textContent = `zoom: ${camera.zoom.toFixed(2)}x`;
-  updateCooldown();
-}
-
-function canPlace() {
-  return Date.now() - lastPlaceAt >= FALLBACK_COOLDOWN_MS && !isPlacing;
-}
-
-function updateCooldown() {
-  const left = Math.max(0, FALLBACK_COOLDOWN_MS - (Date.now() - lastPlaceAt));
-
-  if (left === 0 && !isPlacing) {
-    cooldownLabel.textContent = "ready";
-    cooldownLabel.style.color = "#7bd88f";
-  } else if (isPlacing) {
-    cooldownLabel.textContent = "saving...";
-    cooldownLabel.style.color = "#9aa3b2";
-  } else {
-    cooldownLabel.textContent = `${(left / 1000).toFixed(1)}s`;
-    cooldownLabel.style.color = "#ffd166";
-    requestAnimationFrame(updateCooldown);
-  }
+  zoomLabel.textContent = `Zoom ${camera.zoom.toFixed(2)}x`;
+  renderSplashes();
 }
 
 async function placeAt(tileX, tileY) {
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
-  if (supabaseClient && !currentUser) {
-    alert("Please log in with Discord first.");
+  if (!currentUser) {
+    showToast("Login required");
     return;
   }
 
-  if (!canPlace()) return;
-
-  const chosenBlock = selectedBlock;
-
-  if (!supabaseClient) {
-    placed.set(key(tileX, tileY), chosenBlock);
-    lastPlaceAt = Date.now();
-    localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
-    saveLocal();
-    draw();
-    return;
-  }
+  if (isPlacing) return;
 
   isPlacing = true;
-  updateCooldown();
 
   const { data, error } = await supabaseClient.rpc("place_block", {
     p_x: tileX,
     p_y: tileY,
-    p_block_id: chosenBlock
+    p_block_id: selectedBlock
   });
 
   isPlacing = false;
 
   if (error) {
-    alert("Could not place block: " + error.message);
-    console.warn("place_block transport error:", error);
-    draw();
+    showToast("Could not place block");
     return;
   }
 
   if (!data?.success) {
-    const code = data?.error || "unknown_error";
+    const code = data?.error || "error";
 
-    if (code === "cooldown_active") {
-      cooldownLabel.textContent = "cooldown";
-      cooldownLabel.style.color = "#ffd166";
+    if (code === "no_splashes") {
+      if (data.state) playerState = data.state;
+      renderSplashes();
+      showToast("No splashes");
       return;
     }
 
     if (code === "user_banned") {
-      alert("Your account is banned.");
+      showToast("Account banned");
       return;
     }
 
-    if (code === "not_authenticated") {
-      alert("Please log in with Discord first.");
-      return;
-    }
-
-    alert("Could not place block: " + code);
+    showToast(code.replaceAll("_", " "));
     return;
   }
 
-  const saved = data.block;
-
-  if (saved && Number.isInteger(saved.x) && Number.isInteger(saved.y) && BLOCKS[saved.block_id]) {
-    placed.set(key(saved.x, saved.y), saved.block_id);
-  } else {
-    placed.set(key(tileX, tileY), chosenBlock);
+  if (data.block && BLOCKS[data.block.block_id]) {
+    placed.set(key(data.block.x, data.block.y), data.block.block_id);
   }
 
-  lastPlaceAt = Date.now();
-  localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
-  console.log("Block saved:", saved);
+  if (data.state) {
+    playerState = data.state;
+  }
+
+  renderSplashes();
   draw();
 }
 
@@ -539,6 +516,7 @@ canvas.addEventListener("contextmenu", e => e.preventDefault());
 
 canvas.addEventListener("pointerdown", e => {
   const shouldPan = e.button === 1 || e.button === 2 || spaceDown;
+
   if (shouldPan) {
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
@@ -555,7 +533,7 @@ canvas.addEventListener("pointerdown", e => {
 
 canvas.addEventListener("pointermove", e => {
   const tile = screenToTile(e.clientX, e.clientY);
-  coordsEl.textContent = `x: ${tile.x}, y: ${tile.y}`;
+  coordsEl.textContent = `X ${tile.x} · Y ${tile.y}`;
 
   if (isPanning) {
     camera.x = panStart.camX - (e.clientX - panStart.x) / camera.zoom;
@@ -601,19 +579,6 @@ window.addEventListener("keyup", e => {
   }
 });
 
-document.getElementById("centerBtn").onclick = () => {
-  camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
-  draw();
-};
-
-document.getElementById("resetBtn").onclick = () => {
-  if (!confirm("Clear local cache? This will not delete database blocks.")) return;
-  localStorage.removeItem("mineplace:map");
-  localStorage.removeItem("mineplace:lastPlaceAt");
-  lastPlaceAt = 0;
-  draw();
-};
-
 window.addEventListener("resize", resize);
 
 (async function init() {
@@ -621,7 +586,8 @@ window.addEventListener("resize", resize);
   buildPalette();
   resize();
   await loadVisibleBlocks();
+  await loadPlayerState();
   subscribeToRealtime();
   draw();
-  setInterval(draw, 1000);
+  setInterval(renderSplashes, 1000);
 })();
