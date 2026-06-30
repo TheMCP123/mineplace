@@ -1,3 +1,4 @@
+
 const SUPABASE_URL = "https://ybfgmotbrlhmzlaxfyaq.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bjnUPSDIi8yQdnzvMxhCJg_mlVczei7";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -15,10 +16,664 @@ const splashFill = document.getElementById("splashFill");
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
+const DEFAULT_GRID_BLOCK = "grass_top";
+
+const BLOCK_DEFS = [
+  {
+    "id": "grass_top",
+    "name": "Grass Top",
+    "src": "/textures/grass_top.png",
+    "sort_order": 10
+  },
+  {
+    "id": "grass_side",
+    "name": "Grass Side",
+    "src": "/textures/grass_side.png",
+    "sort_order": 20
+  },
+  {
+    "id": "bedrock",
+    "name": "Bedrock",
+    "src": "/textures/bedrock.png",
+    "sort_order": 30
+  },
+  {
+    "id": "black_concrete",
+    "name": "Black Concrete",
+    "src": "/textures/black_concrete.png",
+    "sort_order": 40
+  },
+  {
+    "id": "black_concrete_powder",
+    "name": "Black Concrete Powder",
+    "src": "/textures/black_concrete_powder.png",
+    "sort_order": 50
+  },
+  {
+    "id": "black_wool",
+    "name": "Black Wool",
+    "src": "/textures/black_wool.png",
+    "sort_order": 60
+  },
+  {
+    "id": "blue_concrete",
+    "name": "Blue Concrete",
+    "src": "/textures/blue_concrete.png",
+    "sort_order": 70
+  },
+  {
+    "id": "blue_concrete_powder",
+    "name": "Blue Concrete Powder",
+    "src": "/textures/blue_concrete_powder.png",
+    "sort_order": 80
+  },
+  {
+    "id": "blue_wool",
+    "name": "Blue Wool",
+    "src": "/textures/blue_wool.png",
+    "sort_order": 90
+  },
+  {
+    "id": "brown_concrete",
+    "name": "Brown Concrete",
+    "src": "/textures/brown_concrete.png",
+    "sort_order": 100
+  },
+  {
+    "id": "brown_concrete_powder",
+    "name": "Brown Concrete Powder",
+    "src": "/textures/brown_concrete_powder.png",
+    "sort_order": 110
+  },
+  {
+    "id": "brown_wool",
+    "name": "Brown Wool",
+    "src": "/textures/brown_wool.png",
+    "sort_order": 120
+  },
+  {
+    "id": "chiseled_deepslate",
+    "name": "Chiseled Deepslate",
+    "src": "/textures/chiseled_deepslate.png",
+    "sort_order": 130
+  },
+  {
+    "id": "chiseled_stone_bricks",
+    "name": "Chiseled Stone Bricks",
+    "src": "/textures/chiseled_stone_bricks.png",
+    "sort_order": 140
+  },
+  {
+    "id": "coal_ore",
+    "name": "Coal Ore",
+    "src": "/textures/coal_ore.png",
+    "sort_order": 150
+  },
+  {
+    "id": "coarse_dirt",
+    "name": "Coarse Dirt",
+    "src": "/textures/coarse_dirt.png",
+    "sort_order": 160
+  },
+  {
+    "id": "cobbled_deepslate",
+    "name": "Cobbled Deepslate",
+    "src": "/textures/cobbled_deepslate.png",
+    "sort_order": 170
+  },
+  {
+    "id": "copper_ore",
+    "name": "Copper Ore",
+    "src": "/textures/copper_ore.png",
+    "sort_order": 180
+  },
+  {
+    "id": "cracked_deepslate_bricks",
+    "name": "Cracked Deepslate Bricks",
+    "src": "/textures/cracked_deepslate_bricks.png",
+    "sort_order": 190
+  },
+  {
+    "id": "cracked_deepslate_tiles",
+    "name": "Cracked Deepslate Tiles",
+    "src": "/textures/cracked_deepslate_tiles.png",
+    "sort_order": 200
+  },
+  {
+    "id": "cracked_stone_bricks",
+    "name": "Cracked Stone Bricks",
+    "src": "/textures/cracked_stone_bricks.png",
+    "sort_order": 210
+  },
+  {
+    "id": "crying_obsidian",
+    "name": "Crying Obsidian",
+    "src": "/textures/crying_obsidian.png",
+    "sort_order": 220
+  },
+  {
+    "id": "cyan_concrete",
+    "name": "Cyan Concrete",
+    "src": "/textures/cyan_concrete.png",
+    "sort_order": 230
+  },
+  {
+    "id": "cyan_concrete_powder",
+    "name": "Cyan Concrete Powder",
+    "src": "/textures/cyan_concrete_powder.png",
+    "sort_order": 240
+  },
+  {
+    "id": "cyan_wool",
+    "name": "Cyan Wool",
+    "src": "/textures/cyan_wool.png",
+    "sort_order": 250
+  },
+  {
+    "id": "deepslate",
+    "name": "Deepslate",
+    "src": "/textures/deepslate.png",
+    "sort_order": 260
+  },
+  {
+    "id": "deepslate_bricks",
+    "name": "Deepslate Bricks",
+    "src": "/textures/deepslate_bricks.png",
+    "sort_order": 270
+  },
+  {
+    "id": "deepslate_coal_ore",
+    "name": "Deepslate Coal Ore",
+    "src": "/textures/deepslate_coal_ore.png",
+    "sort_order": 280
+  },
+  {
+    "id": "deepslate_copper_ore",
+    "name": "Deepslate Copper Ore",
+    "src": "/textures/deepslate_copper_ore.png",
+    "sort_order": 290
+  },
+  {
+    "id": "deepslate_diamond_ore",
+    "name": "Deepslate Diamond Ore",
+    "src": "/textures/deepslate_diamond_ore.png",
+    "sort_order": 300
+  },
+  {
+    "id": "deepslate_emerald_ore",
+    "name": "Deepslate Emerald Ore",
+    "src": "/textures/deepslate_emerald_ore.png",
+    "sort_order": 310
+  },
+  {
+    "id": "deepslate_gold_ore",
+    "name": "Deepslate Gold Ore",
+    "src": "/textures/deepslate_gold_ore.png",
+    "sort_order": 320
+  },
+  {
+    "id": "deepslate_iron_ore",
+    "name": "Deepslate Iron Ore",
+    "src": "/textures/deepslate_iron_ore.png",
+    "sort_order": 330
+  },
+  {
+    "id": "deepslate_lapis_ore",
+    "name": "Deepslate Lapis Ore",
+    "src": "/textures/deepslate_lapis_ore.png",
+    "sort_order": 340
+  },
+  {
+    "id": "deepslate_redstone_ore",
+    "name": "Deepslate Redstone Ore",
+    "src": "/textures/deepslate_redstone_ore.png",
+    "sort_order": 350
+  },
+  {
+    "id": "deepslate_tiles",
+    "name": "Deepslate Tiles",
+    "src": "/textures/deepslate_tiles.png",
+    "sort_order": 360
+  },
+  {
+    "id": "diamond_ore",
+    "name": "Diamond Ore",
+    "src": "/textures/diamond_ore.png",
+    "sort_order": 370
+  },
+  {
+    "id": "dirt",
+    "name": "Dirt",
+    "src": "/textures/dirt.png",
+    "sort_order": 380
+  },
+  {
+    "id": "emerald_ore",
+    "name": "Emerald Ore",
+    "src": "/textures/emerald_ore.png",
+    "sort_order": 390
+  },
+  {
+    "id": "end_stone",
+    "name": "End Stone",
+    "src": "/textures/end_stone.png",
+    "sort_order": 400
+  },
+  {
+    "id": "end_stone_bricks",
+    "name": "End Stone Bricks",
+    "src": "/textures/end_stone_bricks.png",
+    "sort_order": 410
+  },
+  {
+    "id": "gold_ore",
+    "name": "Gold Ore",
+    "src": "/textures/gold_ore.png",
+    "sort_order": 420
+  },
+  {
+    "id": "gray_concrete",
+    "name": "Gray Concrete",
+    "src": "/textures/gray_concrete.png",
+    "sort_order": 430
+  },
+  {
+    "id": "gray_concrete_powder",
+    "name": "Gray Concrete Powder",
+    "src": "/textures/gray_concrete_powder.png",
+    "sort_order": 440
+  },
+  {
+    "id": "gray_wool",
+    "name": "Gray Wool",
+    "src": "/textures/gray_wool.png",
+    "sort_order": 450
+  },
+  {
+    "id": "green_concrete",
+    "name": "Green Concrete",
+    "src": "/textures/green_concrete.png",
+    "sort_order": 460
+  },
+  {
+    "id": "green_concrete_powder",
+    "name": "Green Concrete Powder",
+    "src": "/textures/green_concrete_powder.png",
+    "sort_order": 470
+  },
+  {
+    "id": "green_wool",
+    "name": "Green Wool",
+    "src": "/textures/green_wool.png",
+    "sort_order": 480
+  },
+  {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "src": "/textures/iron_ore.png",
+    "sort_order": 490
+  },
+  {
+    "id": "lapis_ore",
+    "name": "Lapis Ore",
+    "src": "/textures/lapis_ore.png",
+    "sort_order": 500
+  },
+  {
+    "id": "light_blue_concrete",
+    "name": "Light Blue Concrete",
+    "src": "/textures/light_blue_concrete.png",
+    "sort_order": 510
+  },
+  {
+    "id": "light_blue_concrete_powder",
+    "name": "Light Blue Concrete Powder",
+    "src": "/textures/light_blue_concrete_powder.png",
+    "sort_order": 520
+  },
+  {
+    "id": "light_blue_wool",
+    "name": "Light Blue Wool",
+    "src": "/textures/light_blue_wool.png",
+    "sort_order": 530
+  },
+  {
+    "id": "light_gray_concrete",
+    "name": "Light Gray Concrete",
+    "src": "/textures/light_gray_concrete.png",
+    "sort_order": 540
+  },
+  {
+    "id": "light_gray_concrete_powder",
+    "name": "Light Gray Concrete Powder",
+    "src": "/textures/light_gray_concrete_powder.png",
+    "sort_order": 550
+  },
+  {
+    "id": "light_gray_wool",
+    "name": "Light Gray Wool",
+    "src": "/textures/light_gray_wool.png",
+    "sort_order": 560
+  },
+  {
+    "id": "lime_concrete",
+    "name": "Lime Concrete",
+    "src": "/textures/lime_concrete.png",
+    "sort_order": 570
+  },
+  {
+    "id": "lime_concrete_powder",
+    "name": "Lime Concrete Powder",
+    "src": "/textures/lime_concrete_powder.png",
+    "sort_order": 580
+  },
+  {
+    "id": "lime_wool",
+    "name": "Lime Wool",
+    "src": "/textures/lime_wool.png",
+    "sort_order": 590
+  },
+  {
+    "id": "magenta_concrete",
+    "name": "Magenta Concrete",
+    "src": "/textures/magenta_concrete.png",
+    "sort_order": 600
+  },
+  {
+    "id": "magenta_concrete_powder",
+    "name": "Magenta Concrete Powder",
+    "src": "/textures/magenta_concrete_powder.png",
+    "sort_order": 610
+  },
+  {
+    "id": "magenta_wool",
+    "name": "Magenta Wool",
+    "src": "/textures/magenta_wool.png",
+    "sort_order": 620
+  },
+  {
+    "id": "mossy_stone_bricks",
+    "name": "Mossy Stone Bricks",
+    "src": "/textures/mossy_stone_bricks.png",
+    "sort_order": 630
+  },
+  {
+    "id": "nether_gold_ore",
+    "name": "Nether Gold Ore",
+    "src": "/textures/nether_gold_ore.png",
+    "sort_order": 640
+  },
+  {
+    "id": "nether_quartz_ore",
+    "name": "Nether Quartz Ore",
+    "src": "/textures/nether_quartz_ore.png",
+    "sort_order": 650
+  },
+  {
+    "id": "obsidian",
+    "name": "Obsidian",
+    "src": "/textures/obsidian.png",
+    "sort_order": 660
+  },
+  {
+    "id": "orange_concrete",
+    "name": "Orange Concrete",
+    "src": "/textures/orange_concrete.png",
+    "sort_order": 670
+  },
+  {
+    "id": "orange_concrete_powder",
+    "name": "Orange Concrete Powder",
+    "src": "/textures/orange_concrete_powder.png",
+    "sort_order": 680
+  },
+  {
+    "id": "orange_wool",
+    "name": "Orange Wool",
+    "src": "/textures/orange_wool.png",
+    "sort_order": 690
+  },
+  {
+    "id": "pink_concrete",
+    "name": "Pink Concrete",
+    "src": "/textures/pink_concrete.png",
+    "sort_order": 700
+  },
+  {
+    "id": "pink_concrete_powder",
+    "name": "Pink Concrete Powder",
+    "src": "/textures/pink_concrete_powder.png",
+    "sort_order": 710
+  },
+  {
+    "id": "pink_wool",
+    "name": "Pink Wool",
+    "src": "/textures/pink_wool.png",
+    "sort_order": 720
+  },
+  {
+    "id": "polished_deepslate",
+    "name": "Polished Deepslate",
+    "src": "/textures/polished_deepslate.png",
+    "sort_order": 730
+  },
+  {
+    "id": "purple_concrete",
+    "name": "Purple Concrete",
+    "src": "/textures/purple_concrete.png",
+    "sort_order": 740
+  },
+  {
+    "id": "purple_concrete_powder",
+    "name": "Purple Concrete Powder",
+    "src": "/textures/purple_concrete_powder.png",
+    "sort_order": 750
+  },
+  {
+    "id": "purple_wool",
+    "name": "Purple Wool",
+    "src": "/textures/purple_wool.png",
+    "sort_order": 760
+  },
+  {
+    "id": "red_concrete",
+    "name": "Red Concrete",
+    "src": "/textures/red_concrete.png",
+    "sort_order": 770
+  },
+  {
+    "id": "red_concrete_powder",
+    "name": "Red Concrete Powder",
+    "src": "/textures/red_concrete_powder.png",
+    "sort_order": 780
+  },
+  {
+    "id": "red_wool",
+    "name": "Red Wool",
+    "src": "/textures/red_wool.png",
+    "sort_order": 790
+  },
+  {
+    "id": "redstone_ore",
+    "name": "Redstone Ore",
+    "src": "/textures/redstone_ore.png",
+    "sort_order": 800
+  },
+  {
+    "id": "reinforced_deepslate",
+    "name": "Reinforced Deepslate",
+    "src": "/textures/reinforced_deepslate.png",
+    "sort_order": 810
+  },
+  {
+    "id": "rooted_dirt",
+    "name": "Rooted Dirt",
+    "src": "/textures/rooted_dirt.png",
+    "sort_order": 820
+  },
+  {
+    "id": "smooth_stone",
+    "name": "Smooth Stone",
+    "src": "/textures/smooth_stone.png",
+    "sort_order": 830
+  },
+  {
+    "id": "stone",
+    "name": "Stone",
+    "src": "/textures/stone.png",
+    "sort_order": 840
+  },
+  {
+    "id": "stone_bricks",
+    "name": "Stone Bricks",
+    "src": "/textures/stone_bricks.png",
+    "sort_order": 850
+  },
+  {
+    "id": "white_concrete",
+    "name": "White Concrete",
+    "src": "/textures/white_concrete.png",
+    "sort_order": 860
+  },
+  {
+    "id": "white_concrete_powder",
+    "name": "White Concrete Powder",
+    "src": "/textures/white_concrete_powder.png",
+    "sort_order": 870
+  },
+  {
+    "id": "white_wool",
+    "name": "White Wool",
+    "src": "/textures/white_wool.png",
+    "sort_order": 880
+  },
+  {
+    "id": "yellow_concrete",
+    "name": "Yellow Concrete",
+    "src": "/textures/yellow_concrete.png",
+    "sort_order": 890
+  },
+  {
+    "id": "yellow_concrete_powder",
+    "name": "Yellow Concrete Powder",
+    "src": "/textures/yellow_concrete_powder.png",
+    "sort_order": 900
+  },
+  {
+    "id": "yellow_wool",
+    "name": "Yellow Wool",
+    "src": "/textures/yellow_wool.png",
+    "sort_order": 910
+  }
+];
+const LEGACY_BLOCKS = {
+  "grass": {
+    "alias": "grass_top"
+  },
+  "dirt": {
+    "alias": "dirt"
+  },
+  "stone": {
+    "alias": "stone"
+  },
+  "sand": {
+    "colors": [
+      "#d8c06f",
+      "#ecd889",
+      "#c6ad5f",
+      "#f0df9f"
+    ]
+  },
+  "water": {
+    "colors": [
+      "#236ccf",
+      "#2f86e8",
+      "#1d5eb6",
+      "#3b9cff"
+    ]
+  },
+  "oak": {
+    "colors": [
+      "#9a6b35",
+      "#b47d3e",
+      "#7d5429",
+      "#c98d47"
+    ]
+  },
+  "leaves": {
+    "colors": [
+      "#2f7d32",
+      "#3d9c40",
+      "#26682a",
+      "#4caf50"
+    ]
+  },
+  "glass": {
+    "colors": [
+      "#bdeaff",
+      "#d7f4ff",
+      "#91d7f2",
+      "#ffffff"
+    ]
+  },
+  "brick": {
+    "colors": [
+      "#8d3c32",
+      "#a64a3e",
+      "#6f2f28",
+      "#bd5a4d"
+    ]
+  },
+  "gold": {
+    "colors": [
+      "#e0a923",
+      "#ffd24d",
+      "#bd8618",
+      "#ffdf70"
+    ]
+  },
+  "diamond": {
+    "colors": [
+      "#39d6d1",
+      "#75fff7",
+      "#25aaa6",
+      "#b7fffb"
+    ]
+  },
+  "obsidian": {
+    "alias": "obsidian"
+  },
+  "lava": {
+    "colors": [
+      "#ff5b1a",
+      "#ffb000",
+      "#d93000",
+      "#fff066"
+    ]
+  },
+  "snow": {
+    "colors": [
+      "#eaf6ff",
+      "#ffffff",
+      "#cde7f5",
+      "#f7fbff"
+    ]
+  },
+  "netherrack": {
+    "alias": "netherrack"
+  },
+  "endstone": {
+    "alias": "end_stone"
+  }
+};
+
+const BLOCKS = new Map(BLOCK_DEFS.map(block => [block.id, block]));
+const textureCache = new Map();
+const fallbackTextureCache = new Map();
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
-let selectedBlock = "grass";
+let selectedBlock = BLOCK_DEFS[0]?.id || DEFAULT_GRID_BLOCK;
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
 let spaceDown = false;
@@ -36,96 +691,26 @@ let playerState = {
 
 const placed = new Map();
 
-const BLOCKS = {
-  grass: { name: "Grass", colors: ["#4f9c38", "#63b247", "#3d7d2e", "#6ebb4e"] },
-  dirt: { name: "Dirt", colors: ["#79543b", "#8d6649", "#6b4932", "#9a7153"] },
-  stone: { name: "Stone", colors: ["#7f8588", "#959b9e", "#6f7477", "#a4aaad"] },
-  sand: { name: "Sand", colors: ["#d8c06f", "#ecd889", "#c6ad5f", "#f0df9f"] },
-  water: { name: "Water", colors: ["#236ccf", "#2f86e8", "#1d5eb6", "#3b9cff"] },
-  oak: { name: "Oak", colors: ["#9a6b35", "#b47d3e", "#7d5429", "#c98d47"] },
-  leaves: { name: "Leaves", colors: ["#2f7d32", "#3d9c40", "#26682a", "#4caf50"] },
-  glass: { name: "Glass", colors: ["#bdeaff", "#d7f4ff", "#91d7f2", "#ffffff"] },
-  brick: { name: "Brick", colors: ["#8d3c32", "#a64a3e", "#6f2f28", "#bd5a4d"] },
-  gold: { name: "Gold", colors: ["#e0a923", "#ffd24d", "#bd8618", "#ffdf70"] },
-  diamond: { name: "Diamond", colors: ["#39d6d1", "#75fff7", "#25aaa6", "#b7fffb"] },
-  obsidian: { name: "Obsidian", colors: ["#151023", "#24183a", "#0d0a16", "#3a285f"] },
-  lava: { name: "Lava", colors: ["#ff5b1a", "#ffb000", "#d93000", "#fff066"] },
-  snow: { name: "Snow", colors: ["#eaf6ff", "#ffffff", "#cde7f5", "#f7fbff"] },
-  netherrack: { name: "Netherrack", colors: ["#6d2428", "#8a3036", "#531a1d", "#a64045"] },
-  endstone: { name: "End Stone", colors: ["#d9d69a", "#eeebb7", "#c4c078", "#f7f4ca"] }
-};
-
-const textureCanvases = new Map();
-
 function showToast(message) {
-  let el = document.querySelector(".toast");
-
+  let el = document.querySelector('.toast');
   if (!el) {
-    el = document.createElement("div");
-    el.className = "toast";
+    el = document.createElement('div');
+    el.className = 'toast';
     document.body.appendChild(el);
   }
-
   el.textContent = message;
-  el.classList.add("show");
-
+  el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
-}
-
-function rand(seed) {
-  let t = seed + 0x6D2B79F5;
-  t = Math.imul(t ^ t >>> 15, t | 1);
-  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-  return ((t ^ t >>> 14) >>> 0) / 4294967296;
-}
-
-function makeTexture(blockId) {
-  const block = BLOCKS[blockId] || BLOCKS.grass;
-  const c = document.createElement("canvas");
-  c.width = TILE_SIZE;
-  c.height = TILE_SIZE;
-  const g = c.getContext("2d");
-  g.imageSmoothingEnabled = false;
-
-  for (let y = 0; y < TILE_SIZE; y++) {
-    for (let x = 0; x < TILE_SIZE; x++) {
-      const r = rand((x + 1) * 928371 + (y + 1) * 18213 + blockId.length * 77);
-      const color = block.colors[Math.floor(r * block.colors.length)];
-      g.fillStyle = color;
-      g.fillRect(x, y, 1, 1);
-    }
-  }
-
-  g.fillStyle = "rgba(255,255,255,.08)";
-  g.fillRect(0, 0, TILE_SIZE, 1);
-  g.fillRect(0, 0, 1, TILE_SIZE);
-
-  g.fillStyle = "rgba(0,0,0,.12)";
-  g.fillRect(0, TILE_SIZE - 1, TILE_SIZE, 1);
-  g.fillRect(TILE_SIZE - 1, 0, 1, TILE_SIZE);
-
-  return c;
-}
-
-function getTexture(blockId) {
-  if (!textureCanvases.has(blockId)) {
-    textureCanvases.set(blockId, makeTexture(blockId));
-  }
-  return textureCanvases.get(blockId);
-}
-
-function key(x, y) {
-  return `${x},${y}`;
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
 }
 
 function escapeHtml(value) {
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function getDiscordProfile(sessionUser) {
@@ -137,43 +722,37 @@ function getDiscordProfile(sessionUser) {
       meta.user_name ||
       meta.preferred_username ||
       meta.provider_id ||
-      "Player",
+      'Player',
     avatar_url: meta.avatar_url || null
   };
 }
 
 async function ensureProfile(sessionUser) {
   if (!supabaseClient || !sessionUser) return;
-
   const profile = getDiscordProfile(sessionUser);
-
   await supabaseClient
-    .from("profiles")
+    .from('profiles')
     .upsert({
       id: sessionUser.id,
       username: profile.username,
       avatar_url: profile.avatar_url
-    }, { onConflict: "id" });
+    }, { onConflict: 'id' });
 }
 
 function renderAuth() {
   if (!authBox) return;
-
   if (!supabaseClient) {
     authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
     return;
   }
-
   if (!currentUser) {
     authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
-    document.getElementById("loginBtn")?.addEventListener("click", loginWithDiscord);
+    document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
     return;
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url
-    ? `<img src="${profile.avatar_url}" alt="">`
-    : "";
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
 
   authBox.innerHTML = `
     <div class="auth-user">
@@ -182,23 +761,16 @@ function renderAuth() {
     </div>
     <button id="logoutBtn">Logout</button>
   `;
-
-  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
 
 async function loginWithDiscord() {
   if (!supabaseClient) return;
-
   const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: "discord",
-    options: {
-      redirectTo: window.location.origin
-    }
+    provider: 'discord',
+    options: { redirectTo: window.location.origin }
   });
-
-  if (error) {
-    showToast("Discord login failed");
-  }
+  if (error) showToast('Discord login failed');
 }
 
 async function logout() {
@@ -218,21 +790,15 @@ async function initAuth() {
 
   const { data } = await supabaseClient.auth.getSession();
   currentUser = data?.session?.user || null;
-
-  if (currentUser) {
-    await ensureProfile(currentUser);
-  }
-
+  if (currentUser) await ensureProfile(currentUser);
   renderAuth();
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
-
     if (currentUser) {
       await ensureProfile(currentUser);
       await loadPlayerState();
     }
-
     renderAuth();
     renderSplashes();
   });
@@ -243,13 +809,8 @@ async function loadPlayerState() {
     renderSplashes();
     return;
   }
-
-  const { data, error } = await supabaseClient.rpc("get_player_state");
-
-  if (error || !data?.success) {
-    return;
-  }
-
+  const { data, error } = await supabaseClient.rpc('get_player_state');
+  if (error || !data?.success) return;
   playerState = data.state;
   renderSplashes();
 }
@@ -269,37 +830,103 @@ function renderSplashes() {
   splashFill.style.width = `${percent}%`;
 
   if (!currentUser) {
-    rechargeLabel.textContent = "Login required";
+    rechargeLabel.textContent = 'Login required';
     return;
   }
-
   if (current >= capacity) {
-    rechargeLabel.textContent = "Full";
+    rechargeLabel.textContent = 'Full';
     return;
   }
-
   const left = getRechargeRemainingSeconds();
-  rechargeLabel.textContent = left > 0 ? `+1 in ${left}s` : "Recharging";
+  rechargeLabel.textContent = left > 0 ? `+1 in ${left}s` : 'Recharging';
+}
+
+async function loadTextures() {
+  await Promise.all(BLOCK_DEFS.map(loadTexture));
+}
+
+function loadTexture(block) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      textureCache.set(block.id, img);
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = block.src;
+  });
+}
+
+function rand(seed) {
+  let t = seed + 0x6D2B79F5;
+  t = Math.imul(t ^ t >>> 15, t | 1);
+  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+
+function makeFallbackTexture(blockId, colors) {
+  const c = document.createElement('canvas');
+  c.width = TILE_SIZE;
+  c.height = TILE_SIZE;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+
+  for (let y = 0; y < TILE_SIZE; y++) {
+    for (let x = 0; x < TILE_SIZE; x++) {
+      const r = rand((x + 1) * 928371 + (y + 1) * 18213 + blockId.length * 77);
+      const color = colors[Math.floor(r * colors.length)];
+      g.fillStyle = color;
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+
+  g.fillStyle = 'rgba(255,255,255,.08)';
+  g.fillRect(0, 0, TILE_SIZE, 1);
+  g.fillRect(0, 0, 1, TILE_SIZE);
+  g.fillStyle = 'rgba(0,0,0,.12)';
+  g.fillRect(0, TILE_SIZE - 1, TILE_SIZE, 1);
+  g.fillRect(TILE_SIZE - 1, 0, 1, TILE_SIZE);
+  return c;
+}
+
+function getLegacyFallbackTexture(blockId) {
+  if (fallbackTextureCache.has(blockId)) return fallbackTextureCache.get(blockId);
+  const def = LEGACY_BLOCKS[blockId];
+  if (!def?.colors) return null;
+  const tex = makeFallbackTexture(blockId, def.colors);
+  fallbackTextureCache.set(blockId, tex);
+  return tex;
+}
+
+function resolveTextureAsset(blockId) {
+  if (textureCache.has(blockId)) return textureCache.get(blockId);
+
+  const legacy = LEGACY_BLOCKS[blockId];
+  if (legacy?.alias && textureCache.has(legacy.alias)) return textureCache.get(legacy.alias);
+  if (legacy?.colors) return getLegacyFallbackTexture(blockId);
+
+  if (textureCache.has(DEFAULT_GRID_BLOCK)) return textureCache.get(DEFAULT_GRID_BLOCK);
+  return null;
+}
+
+function key(x, y) {
+  return `${x},${y}`;
 }
 
 async function loadVisibleBlocks() {
   if (!supabaseClient) return;
-
-  const { data, error } = await supabaseClient.rpc("get_visible_blocks", {
+  const { data, error } = await supabaseClient.rpc('get_visible_blocks', {
     p_min_x: 0,
     p_min_y: 0,
     p_max_x: MAP_SIZE - 1,
     p_max_y: MAP_SIZE - 1
   });
-
   if (error) return;
-
   placed.clear();
-
   const rows = Array.isArray(data) ? data : [];
-
   for (const row of rows) {
-    if (Number.isInteger(row.x) && Number.isInteger(row.y) && BLOCKS[row.block_id]) {
+    if (Number.isInteger(row.x) && Number.isInteger(row.y) && row.block_id) {
       placed.set(key(row.x, row.y), row.block_id);
     }
   }
@@ -307,30 +934,15 @@ async function loadVisibleBlocks() {
 
 function subscribeToRealtime() {
   if (!supabaseClient) return;
-
-  if (realtimeChannel) {
-    supabaseClient.removeChannel(realtimeChannel);
-  }
-
+  if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
   realtimeChannel = supabaseClient
-    .channel("placed-blocks-map")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "placed_blocks"
-      },
-      payload => {
-        const row = payload.new;
-
-        if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y)) return;
-        if (!BLOCKS[row.block_id]) return;
-
-        placed.set(key(row.x, row.y), row.block_id);
-        draw();
-      }
-    )
+    .channel('placed-blocks-map')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'placed_blocks' }, payload => {
+      const row = payload.new;
+      if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y) || !row.block_id) return;
+      placed.set(key(row.x, row.y), row.block_id);
+      draw();
+    })
     .subscribe();
 }
 
@@ -347,18 +959,12 @@ function screenToWorld(sx, sy) {
   const rect = canvas.getBoundingClientRect();
   const cx = sx - rect.left - rect.width / 2;
   const cy = sy - rect.top - rect.height / 2;
-  return {
-    x: camera.x + cx / camera.zoom,
-    y: camera.y + cy / camera.zoom
-  };
+  return { x: camera.x + cx / camera.zoom, y: camera.y + cy / camera.zoom };
 }
 
 function screenToTile(sx, sy) {
   const world = screenToWorld(sx, sy);
-  return {
-    x: Math.floor(world.x / TILE_SIZE),
-    y: Math.floor(world.y / TILE_SIZE)
-  };
+  return { x: Math.floor(world.x / TILE_SIZE), y: Math.floor(world.y / TILE_SIZE) };
 }
 
 function clampCamera() {
@@ -379,32 +985,32 @@ function drawGrid(viewW, viewH) {
   const endX = Math.min(MAP_SIZE - 1, Math.ceil(worldRight / TILE_SIZE));
   const endY = Math.min(MAP_SIZE - 1, Math.ceil(worldBottom / TILE_SIZE));
 
+  const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
+
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
-      const block = placed.get(key(x, y)) || "grass";
-      ctx.drawImage(getTexture(block), x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      const blockId = placed.get(key(x, y)) || DEFAULT_GRID_BLOCK;
+      const tex = resolveTextureAsset(blockId) || defaultTexture;
+      if (tex) ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
   }
 
   if (camera.zoom >= 1.25) {
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(0,0,0,.22)";
+    ctx.strokeStyle = 'rgba(0,0,0,.18)';
     ctx.lineWidth = 1 / camera.zoom;
-
     for (let x = startX; x <= endX + 1; x++) {
       ctx.moveTo(x * TILE_SIZE, startY * TILE_SIZE);
       ctx.lineTo(x * TILE_SIZE, (endY + 1) * TILE_SIZE);
     }
-
     for (let y = startY; y <= endY + 1; y++) {
       ctx.moveTo(startX * TILE_SIZE, y * TILE_SIZE);
       ctx.lineTo((endX + 1) * TILE_SIZE, y * TILE_SIZE);
     }
-
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "rgba(255,255,255,.35)";
+  ctx.strokeStyle = 'rgba(255,255,255,.28)';
   ctx.lineWidth = 2 / camera.zoom;
   ctx.strokeRect(0, 0, MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 }
@@ -416,16 +1022,13 @@ function draw() {
 
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = "#0b0d11";
+  ctx.fillStyle = '#0b0d11';
   ctx.fillRect(0, 0, w, h);
-
   ctx.translate(w / 2, h / 2);
   ctx.scale(camera.zoom, camera.zoom);
   ctx.translate(-camera.x, -camera.y);
-
   ctx.imageSmoothingEnabled = false;
   drawGrid(w, h);
-
   ctx.restore();
 
   zoomLabel.textContent = `Zoom ${camera.zoom.toFixed(2)}x`;
@@ -434,107 +1037,92 @@ function draw() {
 
 async function placeAt(tileX, tileY) {
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
-
   if (!currentUser) {
-    showToast("Login required");
+    showToast('Login required');
     return;
   }
-
   if (isPlacing) return;
-
   isPlacing = true;
-
-  const { data, error } = await supabaseClient.rpc("place_block", {
+  const { data, error } = await supabaseClient.rpc('place_block', {
     p_x: tileX,
     p_y: tileY,
     p_block_id: selectedBlock
   });
-
   isPlacing = false;
 
   if (error) {
-    showToast("Could not place block");
+    showToast('Could not place block');
     return;
   }
 
   if (!data?.success) {
-    const code = data?.error || "error";
-
-    if (code === "no_splashes") {
+    const code = data?.error || 'error';
+    if (code === 'no_splashes') {
       if (data.state) playerState = data.state;
       renderSplashes();
-      showToast("No splashes");
+      showToast('No splashes');
       return;
     }
-
-    if (code === "user_banned") {
-      showToast("Account banned");
+    if (code === 'user_banned') {
+      showToast('Account banned');
       return;
     }
-
-    showToast(code.replaceAll("_", " "));
+    showToast(code.replaceAll('_', ' '));
     return;
   }
 
-  if (data.block && BLOCKS[data.block.block_id]) {
+  if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
   }
-
-  if (data.state) {
-    playerState = data.state;
-  }
-
+  if (data.state) playerState = data.state;
   renderSplashes();
   draw();
 }
 
 function buildPalette() {
-  paletteEl.innerHTML = "";
-
-  for (const [id, block] of Object.entries(BLOCKS)) {
-    const item = document.createElement("button");
-    item.className = "block" + (id === selectedBlock ? " selected" : "");
+  paletteEl.innerHTML = '';
+  for (const block of BLOCK_DEFS) {
+    const item = document.createElement('button');
+    item.className = 'block' + (block.id === selectedBlock ? ' selected' : '');
     item.title = block.name;
+    item.type = 'button';
     item.onclick = () => {
-      selectedBlock = id;
-      document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
-      item.classList.add("selected");
+      selectedBlock = block.id;
+      document.querySelectorAll('.block').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
     };
 
-    const preview = getTexture(id).cloneNode(true);
-    const label = document.createElement("span");
-    label.className = "name";
-    label.textContent = block.name;
-
-    item.appendChild(preview);
-    item.appendChild(label);
+    const img = document.createElement('img');
+    img.src = block.src;
+    img.alt = block.name;
+    img.width = 32;
+    img.height = 32;
+    img.loading = 'eager';
+    item.appendChild(img);
     paletteEl.appendChild(item);
   }
 }
 
-canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-canvas.addEventListener("pointerdown", e => {
+canvas.addEventListener('pointerdown', e => {
   const shouldPan = e.button === 1 || e.button === 2 || spaceDown;
-
   if (shouldPan) {
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
     canvas.setPointerCapture(e.pointerId);
-    canvas.style.cursor = "grabbing";
+    canvas.style.cursor = 'grabbing';
     return;
   }
-
   if (e.button === 0) {
     const t = screenToTile(e.clientX, e.clientY);
     placeAt(t.x, t.y);
   }
 });
 
-canvas.addEventListener("pointermove", e => {
+canvas.addEventListener('pointermove', e => {
   const tile = screenToTile(e.clientX, e.clientY);
   coordsEl.textContent = `X ${tile.x} · Y ${tile.y}`;
-
   if (isPanning) {
     camera.x = panStart.camX - (e.clientX - panStart.x) / camera.zoom;
     camera.y = panStart.camY - (e.clientY - panStart.y) / camera.zoom;
@@ -543,45 +1131,41 @@ canvas.addEventListener("pointermove", e => {
   }
 });
 
-canvas.addEventListener("pointerup", () => {
+canvas.addEventListener('pointerup', () => {
   isPanning = false;
-  canvas.style.cursor = "crosshair";
+  canvas.style.cursor = 'crosshair';
 });
 
-canvas.addEventListener("wheel", e => {
+canvas.addEventListener('wheel', e => {
   e.preventDefault();
-
   const before = screenToWorld(e.clientX, e.clientY);
   const factor = e.deltaY < 0 ? 1.12 : 0.88;
   camera.zoom *= factor;
   clampCamera();
-
   const after = screenToWorld(e.clientX, e.clientY);
   camera.x += before.x - after.x;
   camera.y += before.y - after.y;
-
   clampCamera();
   draw();
 }, { passive: false });
 
-window.addEventListener("keydown", e => {
-  if (e.code === "Space") {
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
     spaceDown = true;
-    canvas.style.cursor = "grab";
+    canvas.style.cursor = 'grab';
     e.preventDefault();
   }
 });
-
-window.addEventListener("keyup", e => {
-  if (e.code === "Space") {
+window.addEventListener('keyup', e => {
+  if (e.code === 'Space') {
     spaceDown = false;
-    canvas.style.cursor = "crosshair";
+    canvas.style.cursor = 'crosshair';
   }
 });
-
-window.addEventListener("resize", resize);
+window.addEventListener('resize', resize);
 
 (async function init() {
+  await loadTextures();
   await initAuth();
   buildPalette();
   resize();

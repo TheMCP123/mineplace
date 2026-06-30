@@ -9,15 +9,12 @@
 <body>
   <canvas id="world"></canvas>
 
-  <div class="hud top-left">
-    <div class="brand">Mineplace</div>
-    <div class="mini-stats">
-      <span id="coords">X 0 · Y 0</span>
-      <span id="zoomLabel">Zoom 1.00x</span>
-    </div>
+  <div class="hud hud-stats">
+    <span id="coords">X 0 · Y 0</span>
+    <span id="zoomLabel">Zoom 1.00x</span>
   </div>
 
-  <div class="hud top-center" id="splashBox">
+  <div class="hud hud-splashes" id="splashBox">
     <div class="splash-main">
       <span id="splashesLabel">Splashes 0/50</span>
       <span id="rechargeLabel">Recharge ready</span>
@@ -27,7 +24,7 @@
     </div>
   </div>
 
-  <div class="hud top-right" id="authBox">
+  <div class="hud hud-auth" id="authBox">
     <button id="loginBtn">Login with Discord</button>
   </div>
 
