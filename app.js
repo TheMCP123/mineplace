@@ -10,6 +10,8 @@ const paletteEl = document.getElementById("palette");
 const blockSearchEl = document.getElementById("blockSearch");
 const blockCountEl = document.getElementById("blockCount");
 const inventorySliderEl = document.getElementById("inventorySlider");
+const viewMapBtnEl = document.getElementById("viewMapBtn");
+const downloadMapBtnEl = document.getElementById("downloadMapBtn");
 const adminModalEl = document.getElementById("adminModal");
 const adminSearchInputEl = document.getElementById("adminSearchInput");
 const adminSearchBtnEl = document.getElementById("adminSearchBtn");
@@ -35,7 +37,7 @@ const blocksLabel = document.getElementById("blocksLabel");
 const rechargeLabel = document.getElementById("rechargeLabel");
 const blocksFill = document.getElementById("blocksFill");
 
-const MAP_SIZE = 1024;
+const MAP_SIZE = 500;
 const TILE_SIZE = 16;
 const DEFAULT_GRID_BLOCK = "grass_top";
 
@@ -803,8 +805,14 @@ async function loadCurrentProfile() {
   return currentProfile;
 }
 
+function getCurrentUsername() {
+  const profileName = currentProfile?.username;
+  const discordName = getDiscordProfile(currentUser).username;
+  return String(profileName || discordName || "").toLowerCase();
+}
+
 function isAdmin() {
-  const username = String(currentProfile?.username || "").toLowerCase();
+  const username = getCurrentUsername();
   return currentProfile?.role === "admin" || username === "themcp123";
 }
 
@@ -1422,6 +1430,98 @@ paletteEl?.addEventListener("wheel", e => {
 
 paletteEl?.addEventListener("scroll", updateInventorySlider);
 window.addEventListener("resize", updateInventorySlider);
+
+
+async function getAllMapBlocksForExport() {
+  if (!supabaseClient) return [];
+
+  const { data, error } = await supabaseClient.rpc("get_visible_blocks", {
+    p_min_x: 0,
+    p_min_y: 0,
+    p_max_x: MAP_SIZE - 1,
+    p_max_y: MAP_SIZE - 1
+  });
+
+  if (error) {
+    showToast("Map export failed");
+    return [];
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
+async function createMapPngBlob() {
+  showToast("Rendering map...");
+
+  await loadTextures();
+
+  const rows = await getAllMapBlocksForExport();
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = MAP_SIZE * TILE_SIZE;
+  exportCanvas.height = MAP_SIZE * TILE_SIZE;
+
+  const exportCtx = exportCanvas.getContext("2d", { alpha: false });
+  exportCtx.imageSmoothingEnabled = false;
+
+  const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
+
+  for (let y = 0; y < MAP_SIZE; y++) {
+    for (let x = 0; x < MAP_SIZE; x++) {
+      if (defaultTexture) {
+        exportCtx.drawImage(defaultTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+    }
+  }
+
+  for (const row of rows) {
+    if (!Number.isInteger(row.x) || !Number.isInteger(row.y)) continue;
+    if (row.x < 0 || row.y < 0 || row.x >= MAP_SIZE || row.y >= MAP_SIZE) continue;
+
+    const texture = resolveTextureAsset(row.block_id);
+    if (!texture) continue;
+
+    exportCtx.drawImage(texture, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  }
+
+  return await new Promise(resolve => exportCanvas.toBlob(resolve, "image/png"));
+}
+
+async function downloadMapPng() {
+  const blob = await createMapPngBlob();
+  if (!blob) {
+    showToast("Map export failed");
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "mineplace-map.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  showToast("Downloaded PNG");
+}
+
+async function viewMapPng() {
+  const blob = await createMapPngBlob();
+  if (!blob) {
+    showToast("Map export failed");
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+  showToast("Opened PNG");
+}
+
+viewMapBtnEl?.addEventListener("click", viewMapPng);
+downloadMapBtnEl?.addEventListener("click", downloadMapPng);
+
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 

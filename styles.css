@@ -473,3 +473,22 @@ button:hover {
 .danger-btn:hover {
   border-color: rgba(255, 107, 107, .9);
 }
+
+
+.map-actions {
+  right: 14px;
+  bottom: 112px;
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .map-actions {
+    right: 10px;
+    bottom: 154px;
+    flex-direction: column;
+    border-radius: 18px;
+  }
+}
