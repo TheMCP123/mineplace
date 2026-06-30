@@ -7,12 +7,33 @@ const canvas = document.getElementById("world");
 const ctx = canvas.getContext("2d", { alpha: false });
 
 const paletteEl = document.getElementById("palette");
+const blockSearchEl = document.getElementById("blockSearch");
+const blockCountEl = document.getElementById("blockCount");
+const inventorySliderEl = document.getElementById("inventorySlider");
+const adminModalEl = document.getElementById("adminModal");
+const adminSearchInputEl = document.getElementById("adminSearchInput");
+const adminSearchBtnEl = document.getElementById("adminSearchBtn");
+const adminUsersEl = document.getElementById("adminUsers");
+const adminEditEl = document.getElementById("adminEdit");
+const adminSelectedUserEl = document.getElementById("adminSelectedUser");
+const adminBlocksInputEl = document.getElementById("adminBlocksInput");
+const adminSetBtnEl = document.getElementById("adminSetBtn");
+const adminPlusBtnEl = document.getElementById("adminPlusBtn");
+const adminMinusBtnEl = document.getElementById("adminMinusBtn");
+const adminCloseBtnEl = document.getElementById("adminCloseBtn");
+const adminBanStatusEl = document.getElementById("adminBanStatus");
+const adminBanReasonInputEl = document.getElementById("adminBanReasonInput");
+const adminBan1hBtnEl = document.getElementById("adminBan1hBtn");
+const adminBan1dBtnEl = document.getElementById("adminBan1dBtn");
+const adminBan7dBtnEl = document.getElementById("adminBan7dBtn");
+const adminBanForeverBtnEl = document.getElementById("adminBanForeverBtn");
+const adminUnbanBtnEl = document.getElementById("adminUnbanBtn");
 const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
 const authBox = document.getElementById("authBox");
-const splashesLabel = document.getElementById("splashesLabel");
+const blocksLabel = document.getElementById("blocksLabel");
 const rechargeLabel = document.getElementById("rechargeLabel");
-const splashFill = document.getElementById("splashFill");
+const blocksFill = document.getElementById("blocksFill");
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
@@ -674,22 +695,37 @@ const fallbackTextureCache = new Map();
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
 let selectedBlock = BLOCK_DEFS[0]?.id || DEFAULT_GRID_BLOCK;
+let filteredBlockDefs = [...BLOCK_DEFS];
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
 let spaceDown = false;
 let currentUser = null;
+let currentProfile = null;
+let selectedAdminUser = null;
 let realtimeChannel = null;
 let isPlacing = false;
 let toastTimer = null;
 
 let playerState = {
-  splashes: 0,
-  splash_capacity: 50,
+  blocks: 0,
+  block_capacity: 50,
   recharge_seconds: 30,
   next_splash_at: null
 };
 
 const placed = new Map();
+
+
+let drawQueued = false;
+
+function scheduleDraw() {
+  if (drawQueued) return;
+  drawQueued = true;
+  requestAnimationFrame(() => {
+    drawQueued = false;
+    draw();
+  });
+}
 
 function showToast(message) {
   let el = document.querySelector('.toast');
@@ -739,6 +775,199 @@ async function ensureProfile(sessionUser) {
     }, { onConflict: 'id' });
 }
 
+
+async function loadCurrentProfile() {
+  currentProfile = null;
+  if (!supabaseClient || !currentUser) return null;
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id,username,role,is_banned,banned_until,ban_reason,discord_id,block_capacity")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  if (!error && data) currentProfile = data;
+  return currentProfile;
+}
+
+function isAdmin() {
+  return currentProfile?.role === "admin";
+}
+
+function openAdminPanel() {
+  if (!isAdmin()) return;
+  adminModalEl?.classList.remove("hidden");
+  adminSearchUsers();
+}
+
+function closeAdminPanel() {
+  adminModalEl?.classList.add("hidden");
+}
+
+function clampBlockValue(value) {
+  return Math.max(0, Math.min(50, Number(value) || 0));
+}
+
+
+function formatBanStatus(user) {
+  if (!user) return "Ban status: unknown";
+
+  if (!user.is_banned) return "Ban status: not banned";
+
+  if (!user.banned_until) {
+    return `Ban status: banned forever${user.ban_reason ? ` · ${user.ban_reason}` : ""}`;
+  }
+
+  const until = new Date(user.banned_until);
+  const now = Date.now();
+
+  if (until.getTime() <= now) {
+    return "Ban status: expired";
+  }
+
+  return `Ban status: banned until ${until.toLocaleString()}${user.ban_reason ? ` · ${user.ban_reason}` : ""}`;
+}
+
+function refreshAdminSelectedUser() {
+  if (!selectedAdminUser) return;
+
+  adminEditEl?.classList.remove("hidden");
+
+  if (adminSelectedUserEl) {
+    adminSelectedUserEl.textContent = `${selectedAdminUser.username} · ${selectedAdminUser.blocks}/${selectedAdminUser.block_capacity}`;
+  }
+
+  if (adminBlocksInputEl) {
+    adminBlocksInputEl.value = String(clampBlockValue(selectedAdminUser.blocks));
+  }
+
+  if (adminBanStatusEl) {
+    adminBanStatusEl.textContent = formatBanStatus(selectedAdminUser);
+  }
+}
+
+async function adminBanUser(durationSeconds) {
+  if (!isAdmin() || !selectedAdminUser || !supabaseClient) return;
+
+  const { data, error } = await supabaseClient.rpc("admin_ban_user", {
+    p_target_user_id: selectedAdminUser.id,
+    p_duration_seconds: durationSeconds,
+    p_reason: adminBanReasonInputEl?.value || ""
+  });
+
+  if (error || !data?.success) {
+    showToast("Ban failed");
+    return;
+  }
+
+  selectedAdminUser = { ...selectedAdminUser, ...data.user };
+  refreshAdminSelectedUser();
+  showToast("User banned");
+  adminSearchUsers();
+}
+
+async function adminUnbanUser() {
+  if (!isAdmin() || !selectedAdminUser || !supabaseClient) return;
+
+  const { data, error } = await supabaseClient.rpc("admin_unban_user", {
+    p_target_user_id: selectedAdminUser.id
+  });
+
+  if (error || !data?.success) {
+    showToast("Unban failed");
+    return;
+  }
+
+  selectedAdminUser = { ...selectedAdminUser, ...data.user };
+  refreshAdminSelectedUser();
+  showToast("User unbanned");
+  adminSearchUsers();
+}
+
+
+async function adminSearchUsers() {
+  if (!isAdmin() || !supabaseClient || !adminUsersEl) return;
+
+  const { data, error } = await supabaseClient.rpc("admin_search_users", {
+    p_query: adminSearchInputEl?.value || ""
+  });
+
+  if (error || !data?.success) {
+    adminUsersEl.innerHTML = '<div class="admin-note">Search failed.</div>';
+    return;
+  }
+
+  const users = data.users || [];
+  if (!users.length) {
+    adminUsersEl.innerHTML = '<div class="admin-note">No users found.</div>';
+    return;
+  }
+
+  adminUsersEl.innerHTML = "";
+
+  for (const user of users) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "admin-user";
+    item.innerHTML = `
+      <div class="admin-user-main">
+        <div class="admin-user-name">${escapeHtml(user.username)}</div>
+        <div class="admin-user-meta">${escapeHtml(user.role)} · ${user.blocks}/${user.block_capacity} blocks · ${user.is_banned ? "banned" : "not banned"}</div>
+      </div>
+      <span>Choose</span>
+    `;
+
+    item.onclick = () => {
+      selectedAdminUser = user;
+      refreshAdminSelectedUser();
+    };
+
+    adminUsersEl.appendChild(item);
+  }
+}
+
+async function adminSetBlocks(value) {
+  if (!isAdmin() || !selectedAdminUser || !supabaseClient) return;
+  const clamped = clampBlockValue(value);
+
+  const { data, error } = await supabaseClient.rpc("admin_set_blocks", {
+    p_target_user_id: selectedAdminUser.id,
+    p_blocks: clamped
+  });
+
+  if (error || !data?.success) {
+    showToast("Admin action failed");
+    return;
+  }
+
+  selectedAdminUser = { ...selectedAdminUser, ...data.user };
+  refreshAdminSelectedUser();
+  showToast("Blocks updated");
+  adminSearchUsers();
+
+  if (currentUser?.id === data.user.id) {
+    await loadPlayerState();
+  }
+}
+
+adminSearchBtnEl?.addEventListener("click", adminSearchUsers);
+adminSearchInputEl?.addEventListener("keydown", e => {
+  if (e.key === "Enter") adminSearchUsers();
+});
+adminCloseBtnEl?.addEventListener("click", closeAdminPanel);
+adminModalEl?.addEventListener("click", e => {
+  if (e.target === adminModalEl) closeAdminPanel();
+});
+adminSetBtnEl?.addEventListener("click", () => adminSetBlocks(adminBlocksInputEl?.value));
+adminPlusBtnEl?.addEventListener("click", () => adminSetBlocks(clampBlockValue(adminBlocksInputEl?.value) + 5));
+adminMinusBtnEl?.addEventListener("click", () => adminSetBlocks(clampBlockValue(adminBlocksInputEl?.value) - 5));
+adminBan1hBtnEl?.addEventListener("click", () => adminBanUser(60 * 60));
+adminBan1dBtnEl?.addEventListener("click", () => adminBanUser(60 * 60 * 24));
+adminBan7dBtnEl?.addEventListener("click", () => adminBanUser(60 * 60 * 24 * 7));
+adminBanForeverBtnEl?.addEventListener("click", () => adminBanUser(null));
+adminUnbanBtnEl?.addEventListener("click", adminUnbanUser);
+
+
 function renderAuth() {
   if (!authBox) return;
   if (!supabaseClient) {
@@ -754,13 +983,17 @@ function renderAuth() {
   const profile = getDiscordProfile(currentUser);
   const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
 
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
+
   authBox.innerHTML = `
     <div class="auth-user">
       ${avatar}
       <span>${escapeHtml(profile.username)}</span>
     </div>
+    ${adminButton}
     <button id="logoutBtn">Logout</button>
   `;
+  document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
 
@@ -777,9 +1010,10 @@ async function logout() {
   if (!supabaseClient) return;
   await supabaseClient.auth.signOut();
   currentUser = null;
+  currentProfile = null;
   renderAuth();
-  playerState = { splashes: 0, splash_capacity: 50, recharge_seconds: 30, next_splash_at: null };
-  renderSplashes();
+  playerState = { blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null };
+  renderBlocks();
 }
 
 async function initAuth() {
@@ -790,29 +1024,35 @@ async function initAuth() {
 
   const { data } = await supabaseClient.auth.getSession();
   currentUser = data?.session?.user || null;
-  if (currentUser) await ensureProfile(currentUser);
+  if (currentUser) {
+    await ensureProfile(currentUser);
+    await loadCurrentProfile();
+  }
   renderAuth();
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user || null;
     if (currentUser) {
       await ensureProfile(currentUser);
+      await loadCurrentProfile();
       await loadPlayerState();
+    } else {
+      currentProfile = null;
     }
     renderAuth();
-    renderSplashes();
+    renderBlocks();
   });
 }
 
 async function loadPlayerState() {
   if (!supabaseClient || !currentUser) {
-    renderSplashes();
+    renderBlocks();
     return;
   }
   const { data, error } = await supabaseClient.rpc('get_player_state');
   if (error || !data?.success) return;
   playerState = data.state;
-  renderSplashes();
+  renderBlocks();
 }
 
 function getRechargeRemainingSeconds() {
@@ -821,13 +1061,13 @@ function getRechargeRemainingSeconds() {
   return Math.max(0, Math.ceil((readyAt - Date.now()) / 1000));
 }
 
-function renderSplashes() {
-  const current = playerState.splashes ?? 0;
-  const capacity = playerState.splash_capacity ?? 50;
+function renderBlocks() {
+  const current = playerState.blocks ?? 0;
+  const capacity = playerState.block_capacity ?? 50;
   const percent = capacity > 0 ? Math.max(0, Math.min(100, (current / capacity) * 100)) : 0;
 
-  splashesLabel.textContent = `Splashes ${current}/${capacity}`;
-  splashFill.style.width = `${percent}%`;
+  blocksLabel.textContent = `Blocks ${current}/${capacity}`;
+  blocksFill.style.width = `${percent}%`;
 
   if (!currentUser) {
     rechargeLabel.textContent = 'Login required';
@@ -941,7 +1181,7 @@ function subscribeToRealtime() {
       const row = payload.new;
       if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y) || !row.block_id) return;
       placed.set(key(row.x, row.y), row.block_id);
-      draw();
+      scheduleDraw();
     })
     .subscribe();
 }
@@ -1032,11 +1272,18 @@ function draw() {
   ctx.restore();
 
   zoomLabel.textContent = `Zoom ${camera.zoom.toFixed(2)}x`;
-  renderSplashes();
+  renderBlocks();
 }
 
 async function placeAt(tileX, tileY) {
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
+  if (currentBlock === selectedBlock) {
+    showToast("Already placed");
+    return;
+  }
+
   if (!currentUser) {
     showToast('Login required');
     return;
@@ -1057,14 +1304,14 @@ async function placeAt(tileX, tileY) {
 
   if (!data?.success) {
     const code = data?.error || 'error';
-    if (code === 'no_splashes') {
+    if (code === 'no_blocks') {
       if (data.state) playerState = data.state;
-      renderSplashes();
-      showToast('No splashes');
+      renderBlocks();
+      showToast('No blocks');
       return;
     }
     if (code === 'user_banned') {
-      showToast('Account banned');
+      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : 'Account banned');
       return;
     }
     showToast(code.replaceAll('_', ' '));
@@ -1075,33 +1322,92 @@ async function placeAt(tileX, tileY) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
   }
   if (data.state) playerState = data.state;
-  renderSplashes();
+  renderBlocks();
   draw();
 }
 
+function normalizeSearch(value) {
+  return String(value || "").trim().toLowerCase().replaceAll(" ", "_");
+}
+
+function updateInventorySlider() {
+  if (!inventorySliderEl || !paletteEl) return;
+
+  const maxScroll = Math.max(0, paletteEl.scrollWidth - paletteEl.clientWidth);
+  inventorySliderEl.max = String(Math.ceil(maxScroll));
+  inventorySliderEl.value = String(Math.round(paletteEl.scrollLeft));
+  inventorySliderEl.disabled = maxScroll <= 0;
+  inventorySliderEl.style.opacity = maxScroll <= 0 ? ".35" : "1";
+}
+
+function filterBlocks() {
+  const query = normalizeSearch(blockSearchEl?.value || "");
+
+  filteredBlockDefs = !query
+    ? [...BLOCK_DEFS]
+    : BLOCK_DEFS.filter(block => {
+        const id = block.id.toLowerCase();
+        const name = block.name.toLowerCase().replaceAll(" ", "_");
+        return id.includes(query) || name.includes(query);
+      });
+
+  if (!filteredBlockDefs.some(block => block.id === selectedBlock) && filteredBlockDefs.length > 0) {
+    selectedBlock = filteredBlockDefs[0].id;
+  }
+
+  buildPalette();
+}
+
 function buildPalette() {
-  paletteEl.innerHTML = '';
-  for (const block of BLOCK_DEFS) {
-    const item = document.createElement('button');
-    item.className = 'block' + (block.id === selectedBlock ? ' selected' : '');
+  paletteEl.innerHTML = "";
+
+  if (blockCountEl) {
+    blockCountEl.textContent = `${filteredBlockDefs.length} blocks`;
+  }
+
+  for (const block of filteredBlockDefs) {
+    const item = document.createElement("button");
+    item.className = "block" + (block.id === selectedBlock ? " selected" : "");
     item.title = block.name;
-    item.type = 'button';
+    item.type = "button";
     item.onclick = () => {
       selectedBlock = block.id;
-      document.querySelectorAll('.block').forEach(el => el.classList.remove('selected'));
-      item.classList.add('selected');
+      document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
+      item.classList.add("selected");
     };
 
-    const img = document.createElement('img');
+    const img = document.createElement("img");
     img.src = block.src;
     img.alt = block.name;
     img.width = 32;
     img.height = 32;
-    img.loading = 'eager';
+    img.loading = "eager";
     item.appendChild(img);
     paletteEl.appendChild(item);
   }
+
+  requestAnimationFrame(() => {
+    paletteEl.scrollLeft = 0;
+    updateInventorySlider();
+  });
 }
+
+blockSearchEl?.addEventListener("input", filterBlocks);
+
+inventorySliderEl?.addEventListener("input", () => {
+  if (!paletteEl || !inventorySliderEl) return;
+  paletteEl.scrollLeft = Number(inventorySliderEl.value || 0);
+});
+
+paletteEl?.addEventListener("wheel", e => {
+  if (!paletteEl) return;
+  e.preventDefault();
+  paletteEl.scrollLeft += e.deltaY || e.deltaX;
+  updateInventorySlider();
+}, { passive: false });
+
+paletteEl?.addEventListener("scroll", updateInventorySlider);
+window.addEventListener("resize", updateInventorySlider);
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -1127,7 +1433,7 @@ canvas.addEventListener('pointermove', e => {
     camera.x = panStart.camX - (e.clientX - panStart.x) / camera.zoom;
     camera.y = panStart.camY - (e.clientY - panStart.y) / camera.zoom;
     clampCamera();
-    draw();
+    scheduleDraw();
   }
 });
 
@@ -1146,7 +1452,7 @@ canvas.addEventListener('wheel', e => {
   camera.x += before.x - after.x;
   camera.y += before.y - after.y;
   clampCamera();
-  draw();
+  scheduleDraw();
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
@@ -1173,5 +1479,5 @@ window.addEventListener('resize', resize);
   await loadPlayerState();
   subscribeToRealtime();
   draw();
-  setInterval(renderSplashes, 1000);
+  setInterval(renderBlocks, 1000);
 })();
