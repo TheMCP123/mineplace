@@ -1559,6 +1559,8 @@ async function logout() {
   currentUser = null;
   currentProfile = null;
   stopOnlinePresence();
+  closeReportModal();
+  closeInspectModal();
   renderAuth();
   playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null });
   renderBlocks();
@@ -1925,6 +1927,7 @@ function filterBlocks() {
   }
 
   buildPalette();
+  searchReportUsernames("");
 }
 
 function buildPalette() {
@@ -2109,7 +2112,7 @@ canvas.addEventListener('pointerdown', e => {
     isPanning = true;
     panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
     canvas.setPointerCapture(e.pointerId);
-    canvas.style.cursor = 'grabbing';
+    document.body.classList.add('is-grabbing');
     return;
   }
   if (e.button === 0) {
@@ -2131,7 +2134,7 @@ canvas.addEventListener('pointermove', e => {
 
 canvas.addEventListener('pointerup', () => {
   isPanning = false;
-  canvas.style.cursor = 'crosshair';
+  document.body.classList.remove('is-grabbing'); document.body.classList.remove('is-pan-ready');
 });
 
 canvas.addEventListener('wheel', e => {
@@ -2150,22 +2153,639 @@ canvas.addEventListener('wheel', e => {
 window.addEventListener('keydown', e => {
   if (e.code === 'Space') {
     spaceDown = true;
-    canvas.style.cursor = 'grab';
+    document.body.classList.add('is-pan-ready');
     e.preventDefault();
   }
 });
 window.addEventListener('keyup', e => {
   if (e.code === 'Space') {
     spaceDown = false;
-    canvas.style.cursor = 'crosshair';
+    document.body.classList.remove('is-grabbing'); document.body.classList.remove('is-pan-ready');
   }
 });
 window.addEventListener('resize', resize);
+
+
+
+const MINEPLACE_VERSION = 25;
+const CURSOR_TOOL_ID = "__cursor__";
+const REPORT_REASON_OPTIONS = [
+  "Inappropriate Art",
+  "Harassment",
+  "Offensive Text",
+  "Spam / Griefing",
+  "Other"
+];
+
+const inspectModalEl = document.getElementById("inspectModal");
+const inspectCloseBtnEl = document.getElementById("inspectCloseBtn");
+const inspectCoordsEl = document.getElementById("inspectCoords");
+const inspectAvatarEl = document.getElementById("inspectAvatar");
+const inspectAvatarFallbackEl = document.getElementById("inspectAvatarFallback");
+const inspectOwnerNameEl = document.getElementById("inspectOwnerName");
+const inspectOwnerNoteEl = document.getElementById("inspectOwnerNote");
+const inspectReportBtnEl = document.getElementById("inspectReportBtn");
+
+const reportModalEl = document.getElementById("reportModal");
+const reportCloseBtnEl = document.getElementById("reportCloseBtn");
+const reportUsernameInputEl = document.getElementById("reportUsernameInput");
+const reportReasonInputEl = document.getElementById("reportReasonInput");
+const reportDetailsInputEl = document.getElementById("reportDetailsInput");
+const reportSubmitBtnEl = document.getElementById("reportSubmitBtn");
+const reportContextNoteEl = document.getElementById("reportContextNote");
+const reportUsernamesEl = document.getElementById("reportUsernames");
+
+const adminReportsEl = document.getElementById("adminReports");
+const adminRefreshReportsBtnEl = document.getElementById("adminRefreshReportsBtn");
+
+let inspectedBlockContext = null;
+let reportContext = null;
+let reportSearchTimer = null;
+
+(function ensureCursorTool() {
+  if (!Array.isArray(BLOCK_DEFS)) return;
+  if (!BLOCK_DEFS.some(block => block.id === CURSOR_TOOL_ID)) {
+    BLOCK_DEFS.unshift({
+      id: CURSOR_TOOL_ID,
+      name: "Cursor",
+      src: "/textures/cursor_tool.png",
+      sort_order: 0,
+      isTool: true
+    });
+  }
+
+  filteredBlockDefs = [...BLOCK_DEFS];
+})();
+
+function renderAuth() {
+  if (!authBox) return;
+  if (!supabaseClient) {
+    authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
+    return;
+  }
+  if (!currentUser) {
+    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
+    document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
+    return;
+  }
+
+  const profile = getDiscordProfile(currentUser);
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
+  const reportButton = '<button id="reportBtn" class="small-btn">Report</button>';
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
+
+  authBox.innerHTML = `
+    <div class="auth-user">
+      ${avatar}
+      <span>${escapeHtml(profile.username)}</span>
+    </div>
+    ${reportButton}
+    ${adminButton}
+    <button id="logoutBtn">Logout</button>
+  `;
+
+  document.getElementById('reportBtn')?.addEventListener('click', () => openReportModal());
+  document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
+  document.getElementById('logoutBtn')?.addEventListener('click', logout);
+}
+
+function buildPalette() {
+  paletteEl.innerHTML = "";
+
+  if (blockCountEl) {
+    const visualCount = filteredBlockDefs.filter(block => !block.isTool).length;
+    blockCountEl.textContent = `${visualCount} blocks`;
+  }
+
+  for (const block of filteredBlockDefs) {
+    const item = document.createElement("button");
+    item.className = "block" + (block.id === selectedBlock ? " selected" : "") + (block.isTool ? " tool-block" : "");
+    item.title = block.name;
+    item.type = "button";
+    item.onclick = () => {
+      selectedBlock = block.id;
+      document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
+      item.classList.add("selected");
+    };
+
+    const img = document.createElement("img");
+    img.src = block.src;
+    img.alt = block.name;
+    img.width = 32;
+    img.height = 32;
+    img.loading = "eager";
+    item.appendChild(img);
+    paletteEl.appendChild(item);
+  }
+
+  requestAnimationFrame(() => {
+    paletteEl.scrollLeft = 0;
+    updateInventorySlider();
+  });
+}
+
+function formatBanStatus(user) {
+  if (!user) return "Ban status: unknown";
+
+  if (!user.is_banned) return "Ban status: not banned";
+
+  if (!user.banned_until) {
+    return `Ban status: banned forever${user.ban_reason ? ` · ${user.ban_reason}` : ""}`;
+  }
+
+  const until = new Date(user.banned_until);
+  const now = Date.now();
+
+  if (until.getTime() <= now) {
+    return "Ban status: expired";
+  }
+
+  return `Ban status: until ${until.toLocaleString()}${user.ban_reason ? ` · ${user.ban_reason}` : ""}`;
+}
+
+function refreshAdminSelectedUser() {
+  if (!selectedAdminUser) return;
+
+  adminEditEl?.classList.remove("hidden");
+
+  if (adminSelectedUserEl) {
+    adminSelectedUserEl.textContent =
+      `${selectedAdminUser.username} · blocks ${selectedAdminUser.blocks}/${selectedAdminUser.block_capacity}`;
+  }
+
+  if (adminBlocksInputEl) {
+    adminBlocksInputEl.value = String(clampBlockValue(selectedAdminUser.blocks));
+  }
+
+  if (adminBanStatusEl) {
+    adminBanStatusEl.textContent = formatBanStatus(selectedAdminUser);
+  }
+}
+
+function closeInspectModal() {
+  inspectModalEl?.classList.add("hidden");
+}
+
+function closeReportModal() {
+  reportModalEl?.classList.add("hidden");
+  reportContext = null;
+}
+
+function openInspectModal(data, x, y) {
+  inspectedBlockContext = data || null;
+  inspectModalEl?.classList.remove("hidden");
+
+  if (inspectCoordsEl) {
+    inspectCoordsEl.textContent = `X ${x} · Y ${y}`;
+  }
+
+  const username = data?.username || "Nobody yet";
+  const note = data?.exists
+    ? `Placed by ${username}`
+    : "This tile is still the default map block.";
+
+  if (inspectOwnerNameEl) inspectOwnerNameEl.textContent = username;
+  if (inspectOwnerNoteEl) inspectOwnerNoteEl.textContent = note;
+
+  const avatar = data?.avatar_url || "";
+  if (inspectAvatarEl && inspectAvatarFallbackEl) {
+    if (avatar) {
+      inspectAvatarEl.src = avatar;
+      inspectAvatarEl.classList.remove("hidden");
+      inspectAvatarFallbackEl.classList.add("hidden");
+    } else {
+      inspectAvatarEl.classList.add("hidden");
+      inspectAvatarFallbackEl.classList.remove("hidden");
+      inspectAvatarFallbackEl.textContent = String(username || "?").slice(0, 1).toUpperCase();
+    }
+  }
+
+  if (inspectReportBtnEl) {
+    inspectReportBtnEl.disabled = !data?.exists;
+  }
+}
+
+async function inspectBlock(tileX, tileY) {
+  if (!supabaseClient) return;
+
+  const { data, error } = await supabaseClient.rpc("get_block_owner", {
+    p_x: tileX,
+    p_y: tileY
+  });
+
+  if (error) {
+    showToast("Could not inspect block");
+    return;
+  }
+
+  openInspectModal(data, tileX, tileY);
+}
+
+async function searchReportUsernames(query = "") {
+  if (!supabaseClient || !reportUsernamesEl) return;
+
+  const { data, error } = await supabaseClient.rpc("search_usernames", {
+    p_query: query || ""
+  });
+
+  if (error || !data?.success) return;
+
+  reportUsernamesEl.innerHTML = "";
+  for (const username of data.usernames || []) {
+    const option = document.createElement("option");
+    option.value = username;
+    reportUsernamesEl.appendChild(option);
+  }
+}
+
+function queueSearchReportUsernames() {
+  clearTimeout(reportSearchTimer);
+  reportSearchTimer = setTimeout(() => {
+    searchReportUsernames(reportUsernameInputEl?.value || "");
+  }, 120);
+}
+
+function openReportModal(username = "", context = null) {
+  if (!currentUser) {
+    showToast("Login required");
+    return;
+  }
+
+  reportModalEl?.classList.remove("hidden");
+  reportContext = context;
+
+  if (reportUsernameInputEl) {
+    reportUsernameInputEl.value = username || "";
+  }
+
+  if (reportReasonInputEl && !REPORT_REASON_OPTIONS.includes(reportReasonInputEl.value)) {
+    reportReasonInputEl.value = REPORT_REASON_OPTIONS[0];
+  }
+
+  if (reportDetailsInputEl && !context) {
+    reportDetailsInputEl.value = "";
+  }
+
+  if (reportContextNoteEl) {
+    reportContextNoteEl.textContent = context
+      ? `Context: X ${context.x} · Y ${context.y}`
+      : "Manual report";
+  }
+
+  searchReportUsernames(username || "");
+}
+
+async function submitReport() {
+  if (!currentUser || !supabaseClient) {
+    showToast("Login required");
+    return;
+  }
+
+  const targetUsername = String(reportUsernameInputEl?.value || "").trim();
+  const reason = String(reportReasonInputEl?.value || "").trim();
+  const details = String(reportDetailsInputEl?.value || "").trim();
+
+  if (!targetUsername) {
+    showToast("Choose a username");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc("submit_report", {
+    p_target_username: targetUsername,
+    p_reason: reason || "Other",
+    p_details: details || null,
+    p_x: reportContext?.x ?? null,
+    p_y: reportContext?.y ?? null
+  });
+
+  if (error || !data?.success) {
+    showToast(data?.error ? String(data.error).replaceAll("_", " ") : "Report failed");
+    return;
+  }
+
+  showToast("Report sent");
+  closeReportModal();
+  if (reportDetailsInputEl) reportDetailsInputEl.value = "";
+}
+
+async function adminSearchUsers() {
+  if (!isAdmin() || !supabaseClient || !adminUsersEl) return;
+
+  const { data, error } = await supabaseClient.rpc("admin_search_users", {
+    p_query: adminSearchInputEl?.value || ""
+  });
+
+  if (error || !data?.success) {
+    adminUsersEl.innerHTML = '<div class="admin-note">Search failed.</div>';
+    return;
+  }
+
+  const users = data.users || [];
+  if (!users.length) {
+    adminUsersEl.innerHTML = '<div class="admin-note">No users found.</div>';
+    return;
+  }
+
+  adminUsersEl.innerHTML = "";
+
+  for (const user of users) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "admin-user";
+    row.innerHTML = `
+      <div class="admin-user-main">
+        <strong>${escapeHtml(user.username)}</strong>
+        <span class="admin-note">${escapeHtml(formatBanStatus(user))}</span>
+      </div>
+      <div class="admin-user-actions">
+        <span class="admin-note">${user.blocks}/${user.block_capacity}</span>
+      </div>
+    `;
+    row.addEventListener("click", () => {
+      selectedAdminUser = user;
+      refreshAdminSelectedUser();
+    });
+    adminUsersEl.appendChild(row);
+  }
+}
+
+async function adminSetBlocks(value) {
+  if (!selectedAdminUser || !supabaseClient) {
+    showToast("Select user");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc("admin_set_blocks", {
+    p_target_user_id: selectedAdminUser.id,
+    p_blocks: clampBlockValue(value)
+  });
+
+  if (error || !data?.success) {
+    showToast("Admin action failed");
+    return;
+  }
+
+  selectedAdminUser = { ...selectedAdminUser, ...data.user };
+  refreshAdminSelectedUser();
+  showToast("Blocks updated");
+  adminSearchUsers();
+
+  if (currentUser?.id === data.user.id) {
+    await loadPlayerState();
+  }
+}
+
+async function adminBanTarget(targetUserId, durationSeconds, reason = null) {
+  if (!supabaseClient || !targetUserId) {
+    showToast("Select user");
+    return null;
+  }
+
+  const { data, error } = await supabaseClient.rpc("admin_ban_user", {
+    p_target_user_id: targetUserId,
+    p_duration_seconds: durationSeconds,
+    p_reason: reason
+  });
+
+  if (error || !data?.success) {
+    showToast("Admin action failed");
+    return null;
+  }
+
+  if (selectedAdminUser?.id === data.user.id) {
+    selectedAdminUser = { ...selectedAdminUser, ...data.user };
+    refreshAdminSelectedUser();
+  }
+
+  if (currentUser?.id === data.user.id) {
+    await loadCurrentProfile();
+    renderAuth();
+  }
+
+  await adminSearchUsers();
+  await adminLoadReports();
+  showToast("User banned");
+  return data.user;
+}
+
+async function adminBanUser(durationSeconds) {
+  if (!selectedAdminUser) {
+    showToast("Select user");
+    return;
+  }
+
+  await adminBanTarget(selectedAdminUser.id, durationSeconds, "Reported / admin action");
+}
+
+async function adminUnbanUser() {
+  if (!selectedAdminUser || !supabaseClient) {
+    showToast("Select user");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc("admin_unban_user", {
+    p_target_user_id: selectedAdminUser.id
+  });
+
+  if (error || !data?.success) {
+    showToast("Admin action failed");
+    return;
+  }
+
+  selectedAdminUser = { ...selectedAdminUser, ...data.user };
+  refreshAdminSelectedUser();
+  await adminSearchUsers();
+  await adminLoadReports();
+  showToast("User unbanned");
+}
+
+function renderAdminReports(reports) {
+  if (!adminReportsEl) return;
+
+  if (!reports.length) {
+    adminReportsEl.innerHTML = '<div class="admin-note">No reports.</div>';
+    return;
+  }
+
+  adminReportsEl.innerHTML = "";
+
+  for (const report of reports) {
+    const item = document.createElement("div");
+    item.className = "admin-user report-item";
+    item.innerHTML = `
+      <div class="report-meta">
+        <div class="report-reason">${escapeHtml(report.reason || "Report")}</div>
+        <div class="report-sub">
+          Target: <strong>${escapeHtml(report.target_username || "Unknown")}</strong>
+          · Reporter: <strong>${escapeHtml(report.reporter_username || "Unknown")}</strong>
+        </div>
+        <div class="report-sub">
+          ${report.x !== null && report.y !== null ? `X ${report.x} · Y ${report.y} · ` : ""}${new Date(report.created_at).toLocaleString()}
+        </div>
+        <div class="report-details">${escapeHtml(report.details || "No extra details.")}</div>
+      </div>
+      <div class="admin-user-actions wrap">
+        <button class="small-btn primary" type="button" data-action="select">Select user</button>
+        <button class="small-btn danger-btn" type="button" data-action="ban1d">Ban 1d</button>
+        <button class="small-btn danger-btn" type="button" data-action="banforever">Ban forever</button>
+        <button class="small-btn" type="button" data-action="resolve">Resolve</button>
+      </div>
+    `;
+
+    item.querySelector('[data-action="select"]')?.addEventListener("click", () => {
+      selectedAdminUser = {
+        id: report.target_user_id,
+        username: report.target_username,
+        blocks: report.blocks ?? 0,
+        block_capacity: report.block_capacity ?? 50,
+        is_banned: !!report.is_banned,
+        banned_until: report.banned_until,
+        ban_reason: report.ban_reason
+      };
+      refreshAdminSelectedUser();
+      adminEditEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    item.querySelector('[data-action="ban1d"]')?.addEventListener("click", async () => {
+      await adminBanTarget(report.target_user_id, 60 * 60 * 24, `Report: ${report.reason || "Reported"}`);
+    });
+
+    item.querySelector('[data-action="banforever"]')?.addEventListener("click", async () => {
+      await adminBanTarget(report.target_user_id, null, `Report: ${report.reason || "Reported"}`);
+    });
+
+    item.querySelector('[data-action="resolve"]')?.addEventListener("click", async () => {
+      if (!supabaseClient) return;
+      const { data, error } = await supabaseClient.rpc("admin_resolve_report", {
+        p_report_id: report.id
+      });
+      if (error || !data?.success) {
+        showToast("Could not resolve report");
+        return;
+      }
+      showToast("Report resolved");
+      adminLoadReports();
+    });
+
+    adminReportsEl.appendChild(item);
+  }
+}
+
+async function adminLoadReports() {
+  if (!isAdmin() || !supabaseClient || !adminReportsEl) return;
+
+  const { data, error } = await supabaseClient.rpc("admin_get_reports");
+
+  if (error || !data?.success) {
+    adminReportsEl.innerHTML = '<div class="admin-note">Could not load reports.</div>';
+    return;
+  }
+
+  renderAdminReports(data.reports || []);
+}
+
+function openAdminPanel() {
+  if (!isAdmin()) return;
+  adminModalEl?.classList.remove("hidden");
+  adminSearchUsers();
+  adminLoadReports();
+}
+
+function closeAdminPanel() {
+  adminModalEl?.classList.add("hidden");
+}
+
+async function placeAt(tileX, tileY) {
+  if (selectedBlock === CURSOR_TOOL_ID) {
+    await inspectBlock(tileX, tileY);
+    return;
+  }
+
+  if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
+  if (currentBlock === selectedBlock) {
+    showToast("Already placed");
+    return;
+  }
+
+  if (!currentUser) {
+    showToast('Login required');
+    return;
+  }
+  if (isPlacing) return;
+  isPlacing = true;
+  const { data, error } = await supabaseClient.rpc('place_block', {
+    p_x: tileX,
+    p_y: tileY,
+    p_block_id: selectedBlock
+  });
+  isPlacing = false;
+
+  if (error) {
+    showToast('Could not place block');
+    return;
+  }
+
+  if (!data?.success) {
+    const code = data?.error || 'error';
+    if (code === 'no_blocks') {
+      if (data.state) playerState = normalizePlayerState(data.state);
+      renderBlocks();
+      showToast('No blocks');
+      return;
+    }
+    if (code === 'user_banned') {
+      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : 'Account banned');
+      return;
+    }
+    showToast(code.replaceAll('_', ' '));
+    return;
+  }
+
+  if (data.block?.block_id) {
+    placed.set(key(data.block.x, data.block.y), data.block.block_id);
+  }
+
+  if (!data.no_change) {
+    playPlaceSound();
+  }
+
+  if (data.state) playerState = normalizePlayerState(data.state);
+  renderBlocks();
+  scheduleDraw();
+}
+
+inspectCloseBtnEl?.addEventListener("click", closeInspectModal);
+inspectModalEl?.addEventListener("click", e => {
+  if (e.target === inspectModalEl) closeInspectModal();
+});
+inspectReportBtnEl?.addEventListener("click", () => {
+  if (!inspectedBlockContext?.exists) {
+    showToast("No player to report");
+    return;
+  }
+
+  openReportModal(inspectedBlockContext.username, {
+    x: inspectedBlockContext.x,
+    y: inspectedBlockContext.y
+  });
+});
+
+reportCloseBtnEl?.addEventListener("click", closeReportModal);
+reportModalEl?.addEventListener("click", e => {
+  if (e.target === reportModalEl) closeReportModal();
+});
+reportSubmitBtnEl?.addEventListener("click", submitReport);
+reportUsernameInputEl?.addEventListener("input", queueSearchReportUsernames);
+adminRefreshReportsBtnEl?.addEventListener("click", adminLoadReports);
+
 
 (async function init() {
   await loadTextures();
   await initAuth();
   buildPalette();
+  searchReportUsernames("");
   resize();
   await loadVisibleBlocks();
   await loadPlayerState();

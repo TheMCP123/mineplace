@@ -640,3 +640,246 @@ button:hover {
     font-size: 10px;
   }
 }
+
+
+
+/* Version 25 */
+.site-meta {
+  position: fixed;
+  right: 12px;
+  bottom: 10px;
+  z-index: 8;
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 1px 8px rgba(0,0,0,.55);
+}
+
+.site-version {
+  color: rgba(255,255,255,.58);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+.site-since {
+  position: static;
+  color: rgba(255,255,255,.42);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 1px 8px rgba(0,0,0,.55);
+}
+
+@media (max-width: 760px) {
+  .site-meta {
+    right: 10px;
+    bottom: 8px;
+  }
+  .site-version,
+  .site-since {
+    font-size: 10px;
+  }
+}
+
+body,
+#world {
+  cursor: url('/ui/cursor_default.png') 8 8, auto;
+}
+
+button,
+.small-btn,
+.block,
+input[type="button"],
+input[type="range"],
+input[type="checkbox"],
+input[type="search"],
+input[type="number"],
+select,
+summary {
+  cursor: url('/ui/cursor_pointer.png') 8 8, pointer;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea,
+.admin-input,
+.admin-textarea {
+  cursor: url('/ui/cursor_text.png') 10 16, text;
+}
+
+body.is-grabbing,
+body.is-grabbing #world {
+  cursor: url('/ui/cursor_grab.png') 12 12, grabbing !important;
+}
+
+.inspect-owner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: 10px 0 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(255,255,255,.05);
+}
+
+.inspect-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.inspect-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.inspect-owner-name {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.sheet-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.42);
+  padding: 18px;
+}
+
+.sheet-card {
+  width: min(460px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.34);
+  padding: 16px;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sheet-note {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sheet-label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sheet-label.full {
+  grid-column: 1 / -1;
+}
+
+.admin-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.admin-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.admin-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-users {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.admin-user.report-item {
+  align-items: flex-start;
+}
+
+.report-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.report-reason {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.report-sub {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.report-details {
+  color: var(--text);
+  font-size: 12px;
+  opacity: .9;
+  white-space: pre-wrap;
+}
+
+.admin-user-actions.wrap {
+  flex-wrap: wrap;
+}
+
+.block.tool-block::after {
+  content: 'Tool';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .sheet-grid {
+    grid-template-columns: 1fr;
+  }
+}

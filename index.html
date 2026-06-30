@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles.css?v=25" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -19,13 +19,11 @@
     <span id="zoomLabel">Zoom 1.00x</span>
   </div>
 
-
   <div class="hud online-bubble hidden" id="onlineBubble">
     <div class="online-pill">
       <span class="online-dot"></span>
       <span id="onlineCount">0 online</span>
     </div>
-
     <div class="online-popover" id="onlinePopover">
       <div class="online-title">Online players</div>
       <div class="online-list" id="onlineList"></div>
@@ -37,43 +35,91 @@
       <span id="blocksLabel">Blocks 0/50</span>
       <span id="rechargeLabel">Recharge ready</span>
     </div>
-    <div class="blocks-bar">
-      <div id="blocksFill"></div>
-    </div>
+    <div class="blocks-bar"><div id="blocksFill"></div></div>
   </div>
 
-  <div class="hud hud-auth" id="authBox">
-    <button id="loginBtn">Login with Discord</button>
-  </div>
-
+  <div class="hud auth-box" id="authBox"></div>
 
   <div class="hud map-actions">
-    <button id="viewMapBtn" class="small-btn">View PNG</button>
-    <button id="downloadMapBtn" class="small-btn">Download PNG</button>
+    <button id="viewMapBtn" class="small-btn" type="button">View PNG</button>
+    <button id="downloadMapBtn" class="small-btn" type="button">Download PNG</button>
   </div>
 
   <div class="palette-wrap">
-    <div class="inventory-top">
-      <input id="blockSearch" class="block-search" type="search" placeholder="Search blocks..." autocomplete="off" spellcheck="false" />
+    <div class="palette-head">
+      <input id="blockSearch" class="search-input" type="search" placeholder="Search blocks..." autocomplete="off" spellcheck="false" />
       <span id="blockCount" class="block-count">0 blocks</span>
     </div>
-
     <div id="palette" class="palette"></div>
-
-    <input id="inventorySlider" class="inventory-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Inventory scroll" />
+    <input id="inventorySlider" class="inventory-slider" type="range" min="0" max="0" value="0" />
   </div>
 
+  <div id="inspectModal" class="sheet-modal hidden">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <strong>Block info</strong>
+        <button id="inspectCloseBtn" class="small-btn" type="button">Close</button>
+      </div>
+      <div id="inspectCoords" class="sheet-note">X 0 · Y 0</div>
+      <div id="inspectOwnerCard" class="inspect-owner-card">
+        <div class="inspect-avatar-wrap"><img id="inspectAvatar" class="inspect-avatar hidden" alt=""><div id="inspectAvatarFallback" class="online-avatar-fallback">?</div></div>
+        <div class="inspect-meta">
+          <div id="inspectOwnerName" class="inspect-owner-name">Unknown</div>
+          <div id="inspectOwnerNote" class="sheet-note">No owner</div>
+        </div>
+      </div>
+      <div class="sheet-actions">
+        <button id="inspectReportBtn" class="small-btn primary" type="button">Report player</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reportModal" class="sheet-modal hidden">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <strong>Report player</strong>
+        <button id="reportCloseBtn" class="small-btn" type="button">Close</button>
+      </div>
+      <div class="sheet-grid">
+        <label class="sheet-label">
+          <span>Username</span>
+          <input id="reportUsernameInput" class="admin-input" type="text" list="reportUsernames" placeholder="themcp123" autocomplete="off" spellcheck="false" />
+          <datalist id="reportUsernames"></datalist>
+        </label>
+
+        <label class="sheet-label">
+          <span>Reason</span>
+          <select id="reportReasonInput" class="admin-input">
+            <option value="Inappropriate Art">Inappropriate Art</option>
+            <option value="Harassment">Harassment</option>
+            <option value="Offensive Text">Offensive Text</option>
+            <option value="Spam / Griefing">Spam / Griefing</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+
+        <label class="sheet-label full">
+          <span>Extra details</span>
+          <textarea id="reportDetailsInput" class="admin-input admin-textarea" rows="4" placeholder="Optional details..."></textarea>
+        </label>
+      </div>
+      <div id="reportContextNote" class="sheet-note">Manual report</div>
+      <div class="sheet-actions">
+        <button id="reportSubmitBtn" class="small-btn primary" type="button">Send report</button>
+      </div>
+    </div>
+  </div>
 
   <div id="adminModal" class="admin-modal hidden">
     <div class="admin-card">
       <div class="admin-head">
         <strong>Admin Panel</strong>
-        <button id="adminCloseBtn" class="small-btn">Close</button>
+        <button id="adminCloseBtn" class="small-btn" type="button">Close</button>
       </div>
 
       <div class="admin-row">
         <input id="adminSearchInput" class="admin-input" type="search" placeholder="Search username..." autocomplete="off" spellcheck="false" />
-        <button id="adminSearchBtn" class="small-btn">Search</button>
+        <button id="adminSearchBtn" class="small-btn" type="button">Search</button>
       </div>
 
       <div id="adminUsers" class="admin-users"></div>
@@ -82,36 +128,43 @@
         <div class="admin-selected" id="adminSelectedUser">No user selected</div>
 
         <div class="admin-row">
-          <button id="adminMinusBtn" class="small-btn">-5</button>
+          <button id="adminMinusBtn" class="small-btn" type="button">-5</button>
           <input id="adminBlocksInput" class="admin-input number" type="number" min="0" max="50" value="50" />
-          <button id="adminPlusBtn" class="small-btn">+5</button>
-          <button id="adminSetBtn" class="small-btn primary">Set</button>
+          <button id="adminPlusBtn" class="small-btn" type="button">+5</button>
+          <button id="adminSetBtn" class="small-btn primary" type="button">Set</button>
         </div>
 
         <div class="admin-note">Blocks are clamped from 0 to 50.</div>
 
         <div class="admin-ban-box">
-          <div class="admin-ban-status" id="adminBanStatus">Ban status: unknown</div>
+          <div id="adminBanStatus" class="admin-note">Ban status: not banned</div>
 
           <div class="admin-row wrap">
-            <input id="adminBanReasonInput" class="admin-input" type="text" placeholder="Ban reason..." autocomplete="off" spellcheck="false" />
-          </div>
-
-          <div class="admin-row wrap">
-            <button id="adminBan1hBtn" class="small-btn danger-btn">Ban 1h</button>
-            <button id="adminBan1dBtn" class="small-btn danger-btn">Ban 1d</button>
-            <button id="adminBan7dBtn" class="small-btn danger-btn">Ban 7d</button>
-            <button id="adminBanForeverBtn" class="small-btn danger-btn">Ban forever</button>
-            <button id="adminUnbanBtn" class="small-btn primary">Unban</button>
+            <button id="adminBan1hBtn" class="small-btn danger-btn" type="button">Ban 1h</button>
+            <button id="adminBan1dBtn" class="small-btn danger-btn" type="button">Ban 1d</button>
+            <button id="adminBan7dBtn" class="small-btn danger-btn" type="button">Ban 7d</button>
+            <button id="adminBanForeverBtn" class="small-btn danger-btn" type="button">Ban forever</button>
+            <button id="adminUnbanBtn" class="small-btn primary" type="button">Unban</button>
           </div>
         </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-section-head">
+          <strong>Reports</strong>
+          <button id="adminRefreshReportsBtn" class="small-btn" type="button">Refresh</button>
+        </div>
+        <div id="adminReports" class="admin-users"></div>
       </div>
     </div>
   </div>
 
+  <div class="site-meta">
+    <div class="site-version">Version 25</div>
+    <div class="site-since">Since 6/30/2026 California</div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js"></script>
-  <div class="site-since">Since 6/30/2026 California</div>
+  <script src="/app.js?v=25"></script>
 </body>
 </html>
