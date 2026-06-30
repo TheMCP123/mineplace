@@ -15,21 +15,12 @@ const paletteEl = document.getElementById("palette");
 const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
 const cooldownLabel = document.getElementById("cooldownLabel");
-
 const authBox = document.getElementById("authBox");
-let currentUser = null;
-
-
-const supabaseStatusLabel = document.createElement("span");
-supabaseStatusLabel.id = "supabaseStatus";
-supabaseStatusLabel.textContent = supabaseClient ? "db: connected" : "db: offline";
-supabaseStatusLabel.style.color = supabaseClient ? "#7bd88f" : "#ff6b6b";
-document.querySelector(".stats")?.appendChild(supabaseStatusLabel);
-
 
 const MAP_SIZE = 1024;
 const TILE_SIZE = 16;
-const COOLDOWN_MS = 1500; // prototype; after database saving we will set 15-30 seconds
+const CHUNK_SIZE = 32;
+const FALLBACK_COOLDOWN_MS = 2000;
 
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
@@ -38,6 +29,9 @@ let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
 let spaceDown = false;
 let lastPlaceAt = Number(localStorage.getItem("mineplace:lastPlaceAt") || 0);
+let currentUser = null;
+let realtimeChannel = null;
+let isPlacing = false;
 
 const placed = new Map();
 
@@ -56,11 +50,17 @@ const BLOCKS = {
   obsidian: { name: "Obsidian", colors: ["#151023", "#24183a", "#0d0a16", "#3a285f"] },
   lava: { name: "Lava", colors: ["#ff5b1a", "#ffb000", "#d93000", "#fff066"] },
   snow: { name: "Snow", colors: ["#eaf6ff", "#ffffff", "#cde7f5", "#f7fbff"] },
-  netherrack: { name: "Nether", colors: ["#6d2428", "#8a3036", "#531a1d", "#a64045"] },
-  endstone: { name: "End", colors: ["#d9d69a", "#eeebb7", "#c4c078", "#f7f4ca"] }
+  netherrack: { name: "Netherrack", colors: ["#6d2428", "#8a3036", "#531a1d", "#a64045"] },
+  endstone: { name: "End Stone", colors: ["#d9d69a", "#eeebb7", "#c4c078", "#f7f4ca"] }
 };
 
 const textureCanvases = new Map();
+
+const supabaseStatusLabel = document.createElement("span");
+supabaseStatusLabel.id = "supabaseStatus";
+supabaseStatusLabel.textContent = supabaseClient ? "db: connected" : "db: offline";
+supabaseStatusLabel.style.color = supabaseClient ? "#7bd88f" : "#ff6b6b";
+document.querySelector(".stats")?.appendChild(supabaseStatusLabel);
 
 function rand(seed) {
   let t = seed + 0x6D2B79F5;
@@ -70,7 +70,7 @@ function rand(seed) {
 }
 
 function makeTexture(blockId) {
-  const block = BLOCKS[blockId];
+  const block = BLOCKS[blockId] || BLOCKS.grass;
   const c = document.createElement("canvas");
   c.width = TILE_SIZE;
   c.height = TILE_SIZE;
@@ -108,7 +108,14 @@ function key(x, y) {
   return `${x},${y}`;
 }
 
-
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function getDiscordProfile(sessionUser) {
   const meta = sessionUser?.user_metadata || {};
@@ -172,15 +179,6 @@ function renderAuth() {
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 async function loginWithDiscord() {
   if (!supabaseClient) return;
 
@@ -210,6 +208,7 @@ async function initAuth() {
   }
 
   const { data, error } = await supabaseClient.auth.getSession();
+
   if (error) {
     console.warn("Auth session error:", error.message);
   }
@@ -233,58 +232,37 @@ async function initAuth() {
   });
 }
 
-async function loadFromDatabase() {
-  if (!supabaseClient) return false;
-
-  const { data, error } = await supabaseClient
-    .from("placed_blocks")
-    .select("x,y,block_id")
-    .limit(5000);
-
-  if (error) {
-    console.warn("Database did not return blocks yet:", error.message);
-    return false;
+async function loadVisibleBlocks() {
+  if (!supabaseClient) {
+    loadLocal();
+    return;
   }
 
-  if (!Array.isArray(data)) return false;
+  const { data, error } = await supabaseClient.rpc("get_visible_blocks", {
+    p_min_x: 0,
+    p_min_y: 0,
+    p_max_x: MAP_SIZE - 1,
+    p_max_y: MAP_SIZE - 1
+  });
 
-  for (const item of data) {
-    if (Number.isInteger(item.x) && Number.isInteger(item.y) && BLOCKS[item.block_id]) {
-      placed.set(key(item.x, item.y), item.block_id);
+  if (error) {
+    console.warn("Failed to load blocks from database:", error.message);
+    loadLocal();
+    return;
+  }
+
+  placed.clear();
+
+  const rows = Array.isArray(data) ? data : [];
+
+  for (const row of rows) {
+    if (Number.isInteger(row.x) && Number.isInteger(row.y) && BLOCKS[row.block_id]) {
+      placed.set(key(row.x, row.y), row.block_id);
     }
   }
 
-  return true;
+  console.log(`Loaded ${rows.length} blocks from database.`);
 }
-
-
-function subscribeToRealtime() {
-  if (!supabaseClient) return;
-
-  supabaseClient
-    .channel("placed-blocks-map")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "placed_blocks"
-      },
-      payload => {
-        const row = payload.new;
-
-        if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y)) return;
-        if (!BLOCKS[row.block_id]) return;
-
-        placed.set(key(row.x, row.y), row.block_id);
-        draw();
-      }
-    )
-    .subscribe(status => {
-      console.log("Realtime status:", status);
-    });
-}
-
 
 function loadLocal() {
   try {
@@ -308,6 +286,37 @@ function saveLocal() {
     arr.push({ x, y, block });
   }
   localStorage.setItem("mineplace:map", JSON.stringify(arr));
+}
+
+function subscribeToRealtime() {
+  if (!supabaseClient) return;
+
+  if (realtimeChannel) {
+    supabaseClient.removeChannel(realtimeChannel);
+  }
+
+  realtimeChannel = supabaseClient
+    .channel("placed-blocks-map")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "placed_blocks"
+      },
+      payload => {
+        const row = payload.new;
+
+        if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y)) return;
+        if (!BLOCKS[row.block_id]) return;
+
+        placed.set(key(row.x, row.y), row.block_id);
+        draw();
+      }
+    )
+    .subscribe(status => {
+      console.log("Realtime status:", status);
+    });
 }
 
 function resize() {
@@ -407,14 +416,18 @@ function draw() {
 }
 
 function canPlace() {
-  return Date.now() - lastPlaceAt >= COOLDOWN_MS;
+  return Date.now() - lastPlaceAt >= FALLBACK_COOLDOWN_MS && !isPlacing;
 }
 
 function updateCooldown() {
-  const left = Math.max(0, COOLDOWN_MS - (Date.now() - lastPlaceAt));
-  if (left === 0) {
+  const left = Math.max(0, FALLBACK_COOLDOWN_MS - (Date.now() - lastPlaceAt));
+
+  if (left === 0 && !isPlacing) {
     cooldownLabel.textContent = "ready";
     cooldownLabel.style.color = "#7bd88f";
+  } else if (isPlacing) {
+    cooldownLabel.textContent = "saving...";
+    cooldownLabel.style.color = "#9aa3b2";
   } else {
     cooldownLabel.textContent = `${(left / 1000).toFixed(1)}s`;
     cooldownLabel.style.color = "#ffd166";
@@ -432,8 +445,10 @@ async function placeAt(tileX, tileY) {
 
   if (!canPlace()) return;
 
+  const chosenBlock = selectedBlock;
+
   if (!supabaseClient) {
-    placed.set(key(tileX, tileY), selectedBlock);
+    placed.set(key(tileX, tileY), chosenBlock);
     lastPlaceAt = Date.now();
     localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
     saveLocal();
@@ -441,7 +456,8 @@ async function placeAt(tileX, tileY) {
     return;
   }
 
-  const chosenBlock = selectedBlock;
+  isPlacing = true;
+  updateCooldown();
 
   const { data, error } = await supabaseClient.rpc("place_block", {
     p_x: tileX,
@@ -449,33 +465,41 @@ async function placeAt(tileX, tileY) {
     p_block_id: chosenBlock
   });
 
-  if (error) {
-    const msg = error.message || "";
+  isPlacing = false;
 
-    if (msg.includes("cooldown_active")) {
+  if (error) {
+    alert("Could not place block: " + error.message);
+    console.warn("place_block transport error:", error);
+    draw();
+    return;
+  }
+
+  if (!data?.success) {
+    const code = data?.error || "unknown_error";
+
+    if (code === "cooldown_active") {
       cooldownLabel.textContent = "cooldown";
       cooldownLabel.style.color = "#ffd166";
       return;
     }
 
-    if (msg.includes("user_banned")) {
+    if (code === "user_banned") {
       alert("Your account is banned.");
       return;
     }
 
-    if (msg.includes("not_authenticated")) {
+    if (code === "not_authenticated") {
       alert("Please log in with Discord first.");
       return;
     }
 
-    alert("Could not place block: " + msg);
-    console.warn("place_block error:", error);
+    alert("Could not place block: " + code);
     return;
   }
 
-  const saved = Array.isArray(data) ? data[0] : null;
+  const saved = data.block;
 
-  if (saved) {
+  if (saved && Number.isInteger(saved.x) && Number.isInteger(saved.y) && BLOCKS[saved.block_id]) {
     placed.set(key(saved.x, saved.y), saved.block_id);
   } else {
     placed.set(key(tileX, tileY), chosenBlock);
@@ -483,6 +507,7 @@ async function placeAt(tileX, tileY) {
 
   lastPlaceAt = Date.now();
   localStorage.setItem("mineplace:lastPlaceAt", String(lastPlaceAt));
+  console.log("Block saved:", saved);
   draw();
 }
 
@@ -582,9 +607,10 @@ document.getElementById("centerBtn").onclick = () => {
 };
 
 document.getElementById("resetBtn").onclick = () => {
-  if (!confirm("Clear the local map?")) return;
-  placed.clear();
+  if (!confirm("Clear local cache? This will not delete database blocks.")) return;
   localStorage.removeItem("mineplace:map");
+  localStorage.removeItem("mineplace:lastPlaceAt");
+  lastPlaceAt = 0;
   draw();
 };
 
@@ -592,14 +618,10 @@ window.addEventListener("resize", resize);
 
 (async function init() {
   await initAuth();
-
-  const loadedFromDb = await loadFromDatabase();
-  if (!loadedFromDb) {
-    loadLocal();
-  }
-
   buildPalette();
   resize();
+  await loadVisibleBlocks();
   subscribeToRealtime();
+  draw();
   setInterval(draw, 1000);
 })();
