@@ -1442,6 +1442,11 @@ adminUnbanBtnEl?.addEventListener("click", adminUnbanUser);
 
 
 
+function isCurrentUserBanned() {
+  if (!currentProfile?.is_banned) return false;
+  if (!currentProfile.banned_until) return true;
+  return new Date(currentProfile.banned_until).getTime() > Date.now();
+}
 
 function renderOnlinePlayers(players) {
   if (!onlineBubbleEl || !onlineCountEl || !onlineListEl) return;
@@ -1493,10 +1498,15 @@ function renderOnlinePlayers(players) {
   }
 }
 
-function isCurrentUserBanned() {
-  if (!currentProfile?.is_banned) return false;
-  if (!currentProfile.banned_until) return true;
-  return new Date(currentProfile.banned_until).getTime() > Date.now();
+function updateOnlineFromPresence() {
+  if (!onlineChannel) {
+    renderOnlinePlayers([]);
+    return;
+  }
+
+  const state = onlineChannel.presenceState();
+  const players = Object.values(state).flat();
+  renderOnlinePlayers(players);
 }
 
 function stopOnlinePresence() {
@@ -1546,15 +1556,12 @@ function startOnlinePresence() {
 }
 
 
-
 function renderAuth() {
   if (!authBox) return;
-
   if (!supabaseClient) {
     authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
     return;
   }
-
   if (!currentUser) {
     authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
     document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
@@ -1562,8 +1569,9 @@ function renderAuth() {
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
-  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
+
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
 
   authBox.innerHTML = `
     <div class="auth-user">
@@ -1573,7 +1581,6 @@ function renderAuth() {
     ${adminButton}
     <button id="logoutBtn">Logout</button>
   `;
-
   document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
@@ -1831,7 +1838,17 @@ function drawGrid(viewW, viewH) {
     for (let x = startX; x <= endX; x++) {
       const blockId = placed.get(key(x, y)) || DEFAULT_GRID_BLOCK;
       const tex = resolveTextureAsset(blockId) || defaultTexture;
-      if (tex) ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      if (tex) {
+        const tileKey = key(x, y);
+        const scale = getPlacementAnimationScale(tileKey);
+        if (scale !== 1) {
+          const size = TILE_SIZE * scale;
+          const offset = (TILE_SIZE - size) / 2;
+          ctx.drawImage(tex, x * TILE_SIZE + offset, y * TILE_SIZE + offset, size, size);
+        } else {
+          ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+      }
     }
   }
 
@@ -1889,11 +1906,6 @@ async function placeAt(tileX, tileY) {
     return;
   }
 
-  if (isCurrentUserBanned()) {
-    showToast("Account banned");
-    return;
-  }
-
   if (isPlacing) return;
   isPlacing = true;
 
@@ -1931,7 +1943,7 @@ async function placeAt(tileX, tileY) {
 
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
-    addPlacementAnimation(data.block.x, data.block.y, data.block.block_id);
+    addPlacementAnimation(data.block.x, data.block.y);
   }
 
   if (!data.no_change) {
@@ -2217,7 +2229,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 29;
+const MINEPLACE_VERSION = 30;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
@@ -2254,12 +2266,10 @@ let reportSearchTimer = null;
 
 function renderAuth() {
   if (!authBox) return;
-
   if (!supabaseClient) {
     authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
     return;
   }
-
   if (!currentUser) {
     authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
     document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
@@ -2267,8 +2277,8 @@ function renderAuth() {
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
-  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
+  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
+  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
 
   authBox.innerHTML = `
     <div class="auth-user">
@@ -2278,7 +2288,6 @@ function renderAuth() {
     ${adminButton}
     <button id="logoutBtn">Logout</button>
   `;
-
   document.getElementById('adminBtn')?.addEventListener('click', openAdminPanel);
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
@@ -2287,8 +2296,7 @@ function buildPalette() {
   paletteEl.innerHTML = "";
 
   if (blockCountEl) {
-    const visualCount = filteredBlockDefs.filter(block => !block.isTool).length;
-    blockCountEl.textContent = `${visualCount} blocks`;
+    blockCountEl.textContent = `${filteredBlockDefs.length} blocks`;
   }
 
   for (const block of filteredBlockDefs) {
@@ -2308,13 +2316,6 @@ function buildPalette() {
     img.width = 32;
     img.height = 32;
     img.loading = "eager";
-    img.onerror = () => {
-      if (block.id === CURSOR_TOOL_ID) {
-        img.remove();
-        item.textContent = "↖";
-        item.classList.add("tool-block");
-      }
-    };
     item.appendChild(img);
     paletteEl.appendChild(item);
   }
