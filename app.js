@@ -16,6 +16,10 @@ const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
 const cooldownLabel = document.getElementById("cooldownLabel");
 
+const authBox = document.getElementById("authBox");
+let currentUser = null;
+
+
 const supabaseStatusLabel = document.createElement("span");
 supabaseStatusLabel.id = "supabaseStatus";
 supabaseStatusLabel.textContent = supabaseClient ? "db: connected" : "db: offline";
@@ -104,6 +108,130 @@ function key(x, y) {
   return `${x},${y}`;
 }
 
+
+
+function getDiscordProfile(sessionUser) {
+  const meta = sessionUser?.user_metadata || {};
+  return {
+    username:
+      meta.full_name ||
+      meta.name ||
+      meta.user_name ||
+      meta.preferred_username ||
+      meta.provider_id ||
+      "Player",
+    avatar_url: meta.avatar_url || null
+  };
+}
+
+async function ensureProfile(sessionUser) {
+  if (!supabaseClient || !sessionUser) return;
+
+  const profile = getDiscordProfile(sessionUser);
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .upsert({
+      id: sessionUser.id,
+      username: profile.username,
+      avatar_url: profile.avatar_url
+    }, { onConflict: "id" });
+
+  if (error) {
+    console.warn("Не удалось создать/обновить profile:", error.message);
+  }
+}
+
+function renderAuth() {
+  if (!authBox) return;
+
+  if (!supabaseClient) {
+    authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
+    return;
+  }
+
+  if (!currentUser) {
+    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
+    document.getElementById("loginBtn")?.addEventListener("click", loginWithDiscord);
+    return;
+  }
+
+  const profile = getDiscordProfile(currentUser);
+  const avatar = profile.avatar_url
+    ? `<img src="${profile.avatar_url}" alt="">`
+    : "";
+
+  authBox.innerHTML = `
+    <div class="auth-user">
+      ${avatar}
+      <span>${escapeHtml(profile.username)}</span>
+    </div>
+    <button id="logoutBtn">Logout</button>
+  `;
+
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function loginWithDiscord() {
+  if (!supabaseClient) return;
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "discord",
+    options: {
+      redirectTo: window.location.origin
+    }
+  });
+
+  if (error) {
+    alert("Discord login error: " + error.message);
+  }
+}
+
+async function logout() {
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  renderAuth();
+}
+
+async function initAuth() {
+  if (!supabaseClient) {
+    renderAuth();
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    console.warn("Auth session error:", error.message);
+  }
+
+  currentUser = data?.session?.user || null;
+
+  if (currentUser) {
+    await ensureProfile(currentUser);
+  }
+
+  renderAuth();
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    currentUser = session?.user || null;
+
+    if (currentUser) {
+      await ensureProfile(currentUser);
+    }
+
+    renderAuth();
+  });
+}
 
 async function loadFromDatabase() {
   if (!supabaseClient) return false;
@@ -267,6 +395,12 @@ function updateCooldown() {
 
 function placeAt(tileX, tileY) {
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  if (supabaseClient && !currentUser) {
+    alert("Сначала войди через Discord.");
+    return;
+  }
+
   if (!canPlace()) return;
 
   placed.set(key(tileX, tileY), selectedBlock);
@@ -384,6 +518,8 @@ document.getElementById("resetBtn").onclick = () => {
 window.addEventListener("resize", resize);
 
 (async function init() {
+  await initAuth();
+
   const loadedFromDb = await loadFromDatabase();
   if (!loadedFromDb) {
     loadLocal();
