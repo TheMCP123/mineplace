@@ -706,12 +706,25 @@ let realtimeChannel = null;
 let isPlacing = false;
 let toastTimer = null;
 
-let playerState = {
+let playerState = normalizePlayerState({
   blocks: 0,
   block_capacity: 50,
   recharge_seconds: 30,
   next_splash_at: null
-};
+});
+
+
+function normalizePlayerState(state) {
+  const raw = state || {};
+
+  return {
+    blocks: Number(raw.blocks ?? raw.splashes ?? 0),
+    block_capacity: Number(raw.block_capacity ?? raw.splash_capacity ?? 50),
+    recharge_seconds: Number(raw.recharge_seconds ?? raw.splash_recharge_seconds ?? 30),
+    next_splash_at: raw.next_splash_at ?? raw.next_block_at ?? null
+  };
+}
+
 
 const placed = new Map();
 
@@ -1012,7 +1025,7 @@ async function logout() {
   currentUser = null;
   currentProfile = null;
   renderAuth();
-  playerState = { blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null };
+  playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null });
   renderBlocks();
 }
 
@@ -1051,7 +1064,7 @@ async function loadPlayerState() {
   }
   const { data, error } = await supabaseClient.rpc('get_player_state');
   if (error || !data?.success) return;
-  playerState = data.state;
+  playerState = normalizePlayerState(data.state);
   renderBlocks();
 }
 
@@ -1062,8 +1075,8 @@ function getRechargeRemainingSeconds() {
 }
 
 function renderBlocks() {
-  const current = playerState.blocks ?? 0;
-  const capacity = playerState.block_capacity ?? 50;
+  const current = Number(playerState.blocks ?? playerState.splashes ?? 0);
+  const capacity = Number(playerState.block_capacity ?? playerState.splash_capacity ?? 50);
   const percent = capacity > 0 ? Math.max(0, Math.min(100, (current / capacity) * 100)) : 0;
 
   blocksLabel.textContent = `Blocks ${current}/${capacity}`;
@@ -1305,7 +1318,7 @@ async function placeAt(tileX, tileY) {
   if (!data?.success) {
     const code = data?.error || 'error';
     if (code === 'no_blocks') {
-      if (data.state) playerState = data.state;
+      if (data.state) playerState = normalizePlayerState(data.state);
       renderBlocks();
       showToast('No blocks');
       return;
@@ -1321,7 +1334,7 @@ async function placeAt(tileX, tileY) {
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
   }
-  if (data.state) playerState = data.state;
+  if (data.state) playerState = normalizePlayerState(data.state);
   renderBlocks();
   draw();
 }
