@@ -1850,3 +1850,48 @@ textarea,
     bottom: 10px !important;
   }
 }
+
+
+/* Version 42 help button inside PNG action bubble */
+.help-action {
+  display: none !important;
+}
+
+.map-actions {
+  left: 14px !important;
+  bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.map-actions .help-btn {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: 950 !important;
+  background: rgba(13, 19, 19, .96) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: none !important;
+  color: white !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 760px) {
+  .map-actions {
+    left: 10px !important;
+    bottom: 10px !important;
+    gap: 8px !important;
+  }
+
+  .map-actions .help-btn {
+    padding: 9px 15px !important;
+  }
+}
