@@ -1920,6 +1920,11 @@ function draw() {
 
       if (x < startX || x > endX || y < startY || y > endY) continue;
 
+      // grass_top is the same as the base map. Do not draw it as a dark changed pixel.
+      if (blockId === DEFAULT_GRID_BLOCK || blockId === "grass_top") {
+        continue;
+      }
+
       if (drawTextureBlocks) {
         const tex = resolveTextureAsset(blockId);
         if (tex) {
@@ -1928,8 +1933,11 @@ function draw() {
         }
       }
 
-      ctx.fillStyle = "#2f5f2c";
+      // Ultra-low zoom fallback for non-grass blocks only.
+      ctx.globalAlpha = camera.zoom < 0.14 ? 0.72 : 1;
+      ctx.fillStyle = "rgba(31, 59, 35, .72)";
       ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      ctx.globalAlpha = 1;
     }
 
     ctx.restore();
@@ -2162,7 +2170,8 @@ async function createMapPngBlob() {
   try {
     showToast("Rendering map...");
 
-    await loadTextures();
+    updateVisibleVersion();
+  await loadTextures();
 
     const rows = await getAllMapBlocksForExport();
     const exportCanvas = document.createElement("canvas");
@@ -2383,7 +2392,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 34;
+const MINEPLACE_VERSION = 36;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
@@ -3176,6 +3185,11 @@ async function placeAt(tileX, tileY) {
   if (data.state) playerState = normalizePlayerState(data.state);
   renderBlocks();
   scheduleDraw();
+}
+
+function updateVisibleVersion() {
+  const versionEl = document.querySelector(".site-version");
+  if (versionEl) versionEl.textContent = `Version ${MINEPLACE_VERSION}`;
 }
 
 (async function init() {
