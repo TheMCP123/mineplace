@@ -2529,3 +2529,136 @@ button.small-btn:hover,
     width: 100% !important;
   }
 }
+
+
+/* Version 50: animated coords teleport UI polish */
+.coords-teleport-btn {
+  position: fixed !important;
+  left: 282px !important;
+  top: 17px !important;
+  width: 48px !important;
+  height: 48px !important;
+  padding: 10px !important;
+  border-radius: 999px !important;
+  background: rgba(63, 100, 48, .88) !important;
+  border: 1px solid rgba(141, 220, 129, .24) !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,.22) !important;
+  opacity: .96 !important;
+  transform: none !important;
+}
+
+.coords-teleport-btn:hover {
+  background: rgba(72, 115, 55, .96) !important;
+  border-color: rgba(157, 238, 143, .34) !important;
+  transform: translateY(-1px) scale(1.025) !important;
+}
+
+.coords-teleport-btn img {
+  width: 25px !important;
+  height: 25px !important;
+  opacity: .96 !important;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.22)) !important;
+}
+
+.coords-card {
+  width: min(520px, calc(100vw - 28px)) !important;
+  padding: 24px !important;
+  border-radius: 28px !important;
+  background:
+    linear-gradient(180deg, rgba(39, 78, 32, .96), rgba(28, 58, 25, .96)) !important;
+  border: 1px solid rgba(142, 229, 134, .24) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.42) !important;
+}
+
+.coords-card .sheet-head {
+  margin-bottom: 20px !important;
+}
+
+.coords-card .sheet-head strong {
+  font-size: 25px !important;
+  font-weight: 950 !important;
+}
+
+.coords-card #coordsTeleportCloseBtn {
+  height: 42px !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+  background: rgba(58, 82, 62, .96) !important;
+}
+
+.coords-card #coordsTeleportCloseBtn:hover {
+  background: rgba(72, 101, 75, .98) !important;
+}
+
+.coords-form {
+  grid-template-columns: 1fr 1fr 64px !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+.coords-form label {
+  gap: 7px !important;
+  color: rgba(255,255,255,.76) !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.coords-form .admin-input,
+.coords-form input {
+  height: 52px !important;
+  padding: 0 18px !important;
+  border-radius: 18px !important;
+  background: rgba(12, 35, 14, .70) !important;
+  border: 1px solid rgba(147, 231, 143, .22) !important;
+  color: rgba(255,255,255,.96) !important;
+  font-size: 20px !important;
+  font-weight: 950 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.coords-form .admin-input:focus,
+.coords-form input:focus {
+  border-color: rgba(139, 240, 139, .74) !important;
+  box-shadow: 0 0 0 4px rgba(102, 224, 117, .16), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.coords-go-btn {
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 0 !important;
+  border-radius: 18px !important;
+  background: rgba(67, 105, 73, .96) !important;
+  border: 1px solid rgba(157, 238, 143, .46) !important;
+  color: white !important;
+}
+
+.coords-go-btn:hover {
+  background: rgba(83, 128, 86, .98) !important;
+}
+
+.coords-limit-note {
+  margin-top: 12px !important;
+  padding-left: 2px !important;
+  color: rgba(255,255,255,.60) !important;
+  font-size: 13px !important;
+}
+
+@media (max-width: 760px) {
+  .coords-teleport-btn {
+    left: 158px !important;
+    top: 16px !important;
+    width: 42px !important;
+    height: 42px !important;
+    padding: 8px !important;
+  }
+
+  .coords-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .coords-go-btn {
+    width: 100% !important;
+  }
+}

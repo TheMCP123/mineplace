@@ -1104,6 +1104,7 @@ const placementAnimations = new Map();
 
 let drawQueued = false;
 let lastWheelDrawAt = 0;
+let cameraTeleportAnimation = null;
 
 function scheduleDraw() {
   if (drawQueued) return;
@@ -2337,6 +2338,51 @@ function closeCoordsTeleportModal() {
   coordsTeleportModalEl?.classList.add("hidden");
 }
 
+
+function easeInOutCubic(t) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function animateCameraTo(targetX, targetY) {
+  cameraTeleportAnimation = {
+    fromX: camera.x,
+    fromY: camera.y,
+    toX: targetX,
+    toY: targetY,
+    startedAt: performance.now(),
+    duration: 620
+  };
+
+  requestAnimationFrame(stepCameraTeleport);
+}
+
+function stepCameraTeleport(now) {
+  if (!cameraTeleportAnimation) return;
+
+  const anim = cameraTeleportAnimation;
+  const t = Math.max(0, Math.min(1, (now - anim.startedAt) / anim.duration));
+  const eased = easeInOutCubic(t);
+
+  camera.x = anim.fromX + (anim.toX - anim.fromX) * eased;
+  camera.y = anim.fromY + (anim.toY - anim.fromY) * eased;
+
+  clampCamera();
+  scheduleDraw();
+
+  if (t < 1) {
+    requestAnimationFrame(stepCameraTeleport);
+  } else {
+    camera.x = anim.toX;
+    camera.y = anim.toY;
+    clampCamera();
+    cameraTeleportAnimation = null;
+    scheduleDraw();
+  }
+}
+
+
 function goToCoordinates() {
   const x = Math.floor(Number(coordsTeleportXEl?.value));
   const z = Math.floor(Number(coordsTeleportZEl?.value));
@@ -2351,12 +2397,12 @@ function goToCoordinates() {
     return;
   }
 
-  camera.x = x * TILE_SIZE + TILE_SIZE / 2;
-  camera.y = z * TILE_SIZE + TILE_SIZE / 2;
-  clampCamera();
-  scheduleDraw();
+  const targetX = x * TILE_SIZE + TILE_SIZE / 2;
+  const targetZ = z * TILE_SIZE + TILE_SIZE / 2;
+
   closeCoordsTeleportModal();
-  showToast(`Moved to X ${x} · Z ${z}`);
+  animateCameraTo(targetX, targetZ);
+  showToast(`Moving to X ${x} · Z ${z}`);
 }
 
 coordsTeleportBtnEl?.addEventListener("click", openCoordsTeleportModal);
@@ -2565,7 +2611,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 49;
+const MINEPLACE_VERSION = 50;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
