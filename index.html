@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=37" />
+  <link rel="stylesheet" href="/styles.css?v=38" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -108,11 +108,11 @@
 
         <label class="sheet-label full">
           <span>Extra details</span>
-          <textarea id="reportDetailsInput" class="admin-input admin-textarea" rows="4" placeholder="Explain what happened..."></textarea>
+          <textarea id="reportDetailsInput" class="admin-input admin-textarea" rows="4" maxlength="300" placeholder="Explain what happened... max 300 chars"></textarea>
         </label>
       </div>
 
-      <div id="reportContextNote" class="sheet-note">Manual report</div>
+      <div id="reportContextNote" class="sheet-note">Manual report · max 300 chars · 1 report per 3 minutes</div>
 
       <div class="sheet-actions">
         <button id="reportSubmitBtn" class="small-btn primary" type="button">Send Report</button>
@@ -169,11 +169,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 37</div>
+    <div class="site-version">Version 38</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=37"></script>
+  <script src="/app.js?v=38"></script>
 </body>
 </html>

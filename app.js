@@ -2420,7 +2420,9 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 37;
+const MINEPLACE_VERSION = 38;
+const REPORT_MAX_DETAILS_LENGTH = 300;
+
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
@@ -2676,7 +2678,14 @@ async function submitReport() {
 
   const targetUsername = String(reportUsernameInputEl?.value || "").trim();
   const reason = String(reportReasonInputEl?.value || "").trim();
-  const details = String(reportDetailsInputEl?.value || "").trim();
+  let details = String(reportDetailsInputEl?.value || "").trim();
+
+  if (details.length > REPORT_MAX_DETAILS_LENGTH) {
+    details = details.slice(0, REPORT_MAX_DETAILS_LENGTH);
+    if (reportDetailsInputEl) reportDetailsInputEl.value = details;
+    showToast("Report max 300 chars");
+    return;
+  }
 
   if (!targetUsername) {
     showToast("Choose a username");
@@ -2692,7 +2701,14 @@ async function submitReport() {
   });
 
   if (error || !data?.success) {
-    showToast(data?.error ? String(data.error).replaceAll("_", " ") : "Report failed");
+    const errorText = data?.error === "rate_limited"
+      ? "Wait 3 minutes before next report"
+      : data?.error === "details_too_long"
+        ? "Report max 300 chars"
+        : data?.error
+          ? String(data.error).replaceAll("_", " ")
+          : "Report failed";
+    showToast(errorText);
     return;
   }
 
@@ -2861,7 +2877,7 @@ function renderAdminReports(reports) {
         <button class="small-btn primary" type="button" data-action="select">Select user</button>
         <button class="small-btn danger-btn" type="button" data-action="ban1d">Ban 1d</button>
         <button class="small-btn danger-btn" type="button" data-action="banforever">Ban forever</button>
-        <button class="small-btn" type="button" data-action="resolve">Resolve</button>
+        <button class="small-btn" type="button" data-action="resolve">Delete</button>
       </div>
     `;
 
@@ -2889,14 +2905,14 @@ function renderAdminReports(reports) {
 
     item.querySelector('[data-action="resolve"]')?.addEventListener("click", async () => {
       if (!supabaseClient) return;
-      const { data, error } = await supabaseClient.rpc("admin_resolve_report", {
+      const { data, error } = await supabaseClient.rpc("admin_delete_report", {
         p_report_id: report.id
       });
       if (error || !data?.success) {
         showToast("Could not resolve report");
         return;
       }
-      showToast("Report resolved");
+      showToast("Report deleted");
       adminLoadReports();
     });
 
