@@ -1065,6 +1065,7 @@ let onlineChannel = null;
 let isPlacing = false;
 let toastTimer = null;
 let exportInProgress = false;
+let rechargeSyncInProgress = false;
 
 let playerState = normalizePlayerState({
   blocks: 0,
@@ -1649,13 +1650,30 @@ async function initAuth() {
   });
 }
 
+
+async function syncRechargeNow() {
+  if (rechargeSyncInProgress || !supabaseClient || !currentUser) return;
+
+  rechargeSyncInProgress = true;
+
+  try {
+    await loadPlayerState();
+  } finally {
+    rechargeSyncInProgress = false;
+  }
+}
+
+
 async function loadPlayerState() {
   if (!supabaseClient || !currentUser) {
     renderBlocks();
     return;
   }
   const { data, error } = await supabaseClient.rpc('get_player_state');
-  if (error || !data?.success) return;
+  if (error || !data?.success) {
+    console.warn("get_player_state failed", error, data);
+    return;
+  }
   playerState = normalizePlayerState(data.state);
   renderBlocks();
 }
@@ -1675,17 +1693,27 @@ function renderBlocks() {
   blocksFill.style.width = `${percent}%`;
 
   if (!currentUser) {
-    rechargeLabel.textContent = 'Login required';
+    rechargeLabel.textContent = "Login required";
     return;
   }
-  if (current >= capacity) {
-    rechargeLabel.textContent = 'Full';
-    return;
-  }
-  const left = getRechargeRemainingSeconds();
-  rechargeLabel.textContent = left > 0 ? `+1 in ${left}s` : 'Recharging';
-}
 
+  if (current >= capacity) {
+    rechargeLabel.textContent = "Full";
+    return;
+  }
+
+  const left = getRechargeRemainingSeconds();
+
+  if (left > 0) {
+    rechargeLabel.textContent = `+1 in ${left}s`;
+    return;
+  }
+
+  // Timer reached 0. Ask Supabase for the real state immediately.
+  // This fixes the old "Recharging" stuck state while the player stays online.
+  rechargeLabel.textContent = rechargeSyncInProgress ? "Recharging..." : "Syncing...";
+  syncRechargeNow();
+}
 async function loadTextures() {
   if (!texturesLoadPromise) {
     texturesLoadPromise = Promise.all(BLOCK_DEFS.map(loadTexture));
@@ -2392,7 +2420,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 36;
+const MINEPLACE_VERSION = 37;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
@@ -3105,6 +3133,20 @@ async function inspectBlock(tileX, tileY) {
 
   openInspectModal(data, tileX, tileY);
 }
+
+
+async function syncRechargeNow() {
+  if (rechargeSyncInProgress || !supabaseClient || !currentUser) return;
+
+  rechargeSyncInProgress = true;
+
+  try {
+    await loadPlayerState();
+  } finally {
+    rechargeSyncInProgress = false;
+  }
+}
+
 
 async function loadPlayerState() {
   if (!supabaseClient || !currentUser) {
