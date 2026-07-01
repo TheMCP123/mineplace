@@ -1958,3 +1958,84 @@ textarea,
     max-width: 60px !important;
   }
 }
+
+
+/* Version 44: normal PNG buttons + clean round help button */
+.help-action {
+  display: none !important;
+}
+
+.map-actions {
+  left: 14px !important;
+  bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px !important;
+  border-radius: 999px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.map-actions .small-btn {
+  height: 46px !important;
+  min-height: 46px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+  aspect-ratio: auto !important;
+  flex: 0 0 auto !important;
+}
+
+.map-actions .help-btn {
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+.map-actions .help-btn::before,
+.map-actions .help-btn::after {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 760px) {
+  .map-actions {
+    left: 10px !important;
+    bottom: 10px !important;
+    gap: 8px !important;
+    padding: 7px !important;
+  }
+
+  .map-actions .small-btn {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 15px !important;
+    font-size: 14px !important;
+  }
+
+  .map-actions .help-btn {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    font-size: 20px !important;
+  }
+}
