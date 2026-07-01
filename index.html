@@ -6,17 +6,22 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=51" />
+  <link rel="stylesheet" href="/styles.css?v=52" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 </head>
 <body>
-  <canvas id="world"></canvas>
+  <canvas id="world"></canvas>  <div class="coords-row">
+
 
   <div class="hud hud-stats">
-    <span id="coords">X 0 · Y 0</span>
+    <span id="coords">X 0 · Z 0</span>
     <span id="zoomLabel">Zoom 1.00x</span>
+  </div>
+    <button id="coordsTeleportBtn" class="coords-teleport-btn" type="button" aria-label="Go to coordinates" title="Go to coordinates">
+      <img src="/coord-icon.png" alt="">
+    </button>
   </div>
 
   <div class="hud online-bubble hidden" id="onlineBubble">
@@ -39,12 +44,7 @@
       <div id="blocksFill"></div>
     </div>
   </div>
-
-  <button id="coordsTeleportBtn" class="hud coords-teleport-btn" type="button" aria-label="Go to coordinates" title="Go to coordinates">
-    <img src="/coord-icon.png" alt="">
-  </button>
-
-  <div class="hud hud-auth" id="authBox">
+<div class="hud hud-auth" id="authBox">
     <button id="loginBtn">Login with Discord</button>
   </div>
 
@@ -95,7 +95,7 @@
         <strong>Block info</strong>
         <button id="inspectCloseBtn" class="small-btn" type="button">Close</button>
       </div>
-      <div id="inspectCoords" class="sheet-note">X 0 · Y 0</div>
+      <div id="inspectCoords" class="sheet-note">X 0 · Z 0</div>
       <div id="inspectOwnerCard" class="inspect-owner-card">
         <div class="inspect-avatar-wrap">
           <img id="inspectAvatar" class="inspect-avatar hidden" alt="">
@@ -252,11 +252,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 51</div>
+    <div class="site-version">Version 52</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=51"></script>
+  <script src="/app.js?v=52"></script>
 </body>
 </html>

@@ -2406,7 +2406,6 @@ function goToCoordinates() {
 
   closeCoordsTeleportModal();
   animateCameraTo(targetX, targetZ, 2.5);
-  showToast(`Moving to X ${x} · Z ${z} · Zoom 2.50x`);
 }
 
 coordsTeleportBtnEl?.addEventListener("click", openCoordsTeleportModal);
@@ -2615,7 +2614,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 51;
+const MINEPLACE_VERSION = 52;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
