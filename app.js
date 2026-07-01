@@ -43,10 +43,10 @@ const blocksFill = document.getElementById("blocksFill");
 const MAP_SIZE = 500;
 const TILE_SIZE = 16;
 const DEFAULT_GRID_BLOCK = "grass_top";
-const MIN_ZOOM = 0.06;
+const MIN_ZOOM = 0.08;
 const MAX_ZOOM = 8;
-const GRID_DETAIL_ZOOM = 0.28;
-const TILE_TEXTURE_ZOOM = 0.11;
+const GRID_DETAIL_ZOOM = 0.75;
+const TILE_TEXTURE_ZOOM = 0.38;
 const PLACE_SOUND_SRC = "/place.mp3";
 const PLACE_SOUND_POOL_SIZE = 6;
 
@@ -1091,6 +1091,7 @@ const placementAnimations = new Map();
 
 
 let drawQueued = false;
+let lastWheelDrawAt = 0;
 
 function scheduleDraw() {
   if (drawQueued) return;
@@ -1879,11 +1880,12 @@ function drawGrid(viewW, viewH) {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  const viewW = canvas.width / dpr;
+  const viewH = canvas.height / dpr;
 
-  const rect = canvas.getBoundingClientRect();
-  const viewW = rect.width;
-  const viewH = rect.height;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, viewW, viewH);
+  ctx.imageSmoothingEnabled = false;
 
   const worldLeft = camera.x - viewW / 2 / camera.zoom;
   const worldTop = camera.y - viewH / 2 / camera.zoom;
@@ -1895,34 +1897,38 @@ function draw() {
   const endX = Math.min(MAP_SIZE - 1, Math.ceil(worldRight / TILE_SIZE) + 1);
   const endY = Math.min(MAP_SIZE - 1, Math.ceil(worldBottom / TILE_SIZE) + 1);
 
-  const cell = TILE_SIZE * camera.zoom;
-  const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
-
   ctx.save();
   ctx.translate(viewW / 2, viewH / 2);
   ctx.scale(camera.zoom, camera.zoom);
   ctx.translate(-camera.x, -camera.y);
-  ctx.imageSmoothingEnabled = false;
 
-  // Far zoom-out mode: draw one grass background instead of thousands of grass tiles.
+  const mapPx = MAP_SIZE * TILE_SIZE;
+
+  // HARD zoom-out optimization:
+  // draw one grass rectangle + only changed blocks. No grid, no default tile loop.
   if (camera.zoom < TILE_TEXTURE_ZOOM) {
     ctx.fillStyle = "#5da944";
-    ctx.fillRect(0, 0, MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+    ctx.fillRect(0, 0, mapPx, mapPx);
 
-    // Draw only changed blocks as tiny solid pixels. This keeps zoom-out smooth.
+    // If extremely zoomed out, skip textures too. Draw tiny solid blocks only.
+    const drawTextureBlocks = camera.zoom >= 0.22;
+
     for (const [tileKey, blockId] of placed) {
-      const [xStr, yStr] = tileKey.split(",");
-      const x = Number(xStr);
-      const y = Number(yStr);
+      const comma = tileKey.indexOf(",");
+      const x = Number(tileKey.slice(0, comma));
+      const y = Number(tileKey.slice(comma + 1));
 
       if (x < startX || x > endX || y < startY || y > endY) continue;
 
-      const def = BLOCK_DEFS.find(block => block.id === blockId);
-      const colorSeed = def?.id || blockId || "";
-      let hash = 0;
-      for (let i = 0; i < colorSeed.length; i++) hash = ((hash << 5) - hash + colorSeed.charCodeAt(i)) | 0;
-      const hue = Math.abs(hash) % 360;
-      ctx.fillStyle = `hsl(${hue}, 32%, 42%)`;
+      if (drawTextureBlocks) {
+        const tex = resolveTextureAsset(blockId);
+        if (tex) {
+          ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          continue;
+        }
+      }
+
+      ctx.fillStyle = "#2f5f2c";
       ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
 
@@ -1931,7 +1937,9 @@ function draw() {
     return;
   }
 
-  // Normal mode: draw only visible tiles.
+  // Normal visible-only tile mode.
+  const defaultTexture = resolveTextureAsset(DEFAULT_GRID_BLOCK);
+
   for (let y = startY; y <= endY; y++) {
     for (let x = startX; x <= endX; x++) {
       const tileKey = key(x, y);
@@ -1951,10 +1959,10 @@ function draw() {
     }
   }
 
-  // Grid only when it is actually readable.
+  // Grid only at readable zoom. This is the expensive part, so keep it high.
   if (camera.zoom >= GRID_DETAIL_ZOOM) {
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(0,0,0,.18)';
+    ctx.strokeStyle = "rgba(0,0,0,.18)";
     ctx.lineWidth = 1 / camera.zoom;
 
     for (let x = startX; x <= endX + 1; x++) {
@@ -1971,7 +1979,6 @@ function draw() {
   }
 
   ctx.restore();
-
   zoomLabel.textContent = `Zoom ${camera.zoom.toFixed(2)}x`;
 }
 
@@ -2340,15 +2347,23 @@ canvas.addEventListener('pointercancel', e => {
 
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
+
   const before = screenToWorld(e.clientX, e.clientY);
-  const factor = e.deltaY < 0 ? 1.12 : 0.88;
+  const factor = e.deltaY < 0 ? 1.14 : 0.86;
+
   camera.zoom *= factor;
   clampCamera();
+
   const after = screenToWorld(e.clientX, e.clientY);
   camera.x += before.x - after.x;
   camera.y += before.y - after.y;
   clampCamera();
-  scheduleDraw();
+
+  const now = performance.now();
+  if (now - lastWheelDrawAt > 16) {
+    lastWheelDrawAt = now;
+    scheduleDraw();
+  }
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
@@ -2368,7 +2383,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 33;
+const MINEPLACE_VERSION = 34;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
