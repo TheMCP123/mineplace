@@ -1895,3 +1895,66 @@ textarea,
     padding: 9px 15px !important;
   }
 }
+
+
+/* Version 43: help button same size/shape as PNG buttons */
+.map-actions {
+  left: 14px !important;
+  bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  border-radius: 999px !important;
+}
+
+.map-actions .small-btn,
+.map-actions .help-btn {
+  height: 54px !important;
+  min-height: 54px !important;
+  padding: 0 22px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  font-size: 17px !important;
+  font-weight: 950 !important;
+}
+
+.map-actions .help-btn {
+  width: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
+  aspect-ratio: auto !important;
+}
+
+.map-actions .help-btn::before,
+.map-actions .help-btn::after {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 760px) {
+  .map-actions {
+    left: 10px !important;
+    bottom: 10px !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+
+  .map-actions .small-btn,
+  .map-actions .help-btn {
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 17px !important;
+    font-size: 15px !important;
+  }
+
+  .map-actions .help-btn {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+  }
+}
