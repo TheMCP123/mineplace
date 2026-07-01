@@ -1782,3 +1782,71 @@ textarea,
     grid-template-columns: 52px 1fr;
   }
 }
+
+
+/* Version 41 help button placement */
+.help-action {
+  position: fixed !important;
+  left: 14px !important;
+  bottom: 14px !important;
+  padding: 0 !important;
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  z-index: 22 !important;
+}
+
+.help-action::before,
+.help-action::after {
+  display: none !important;
+  content: none !important;
+}
+
+.help-btn {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  min-height: 54px !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(13, 19, 19, .96) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.32) !important;
+  color: white !important;
+  font-size: 25px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+.map-actions {
+  left: 78px !important;
+  bottom: 14px !important;
+}
+
+@media (max-width: 760px) {
+  .help-action {
+    left: 10px !important;
+    bottom: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .help-btn {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    min-height: 50px !important;
+    font-size: 23px !important;
+  }
+
+  .map-actions {
+    left: 68px !important;
+    bottom: 10px !important;
+  }
+}
