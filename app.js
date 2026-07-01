@@ -2505,7 +2505,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 46;
+const MINEPLACE_VERSION = 47;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [

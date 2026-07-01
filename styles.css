@@ -2203,3 +2203,101 @@ body.inventory-hidden canvas {
     bottom: 74px;
   }
 }
+
+
+/* Version 47: clean transparent inventory arrow */
+.inventory-toggle {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 190px !important;
+  width: 44px !important;
+  height: 28px !important;
+  min-width: 44px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: translateX(-50%) !important;
+  z-index: 30 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  opacity: .72 !important;
+  transition: opacity .16s ease, bottom .24s ease, transform .24s ease !important;
+}
+
+.inventory-toggle:hover {
+  background: transparent !important;
+  opacity: .98 !important;
+}
+
+.inventory-toggle::before,
+.inventory-toggle::after {
+  display: none !important;
+  content: none !important;
+}
+
+.inventory-toggle-arrow {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  border-right: 4px solid rgba(255,255,255,.82) !important;
+  border-bottom: 4px solid rgba(255,255,255,.82) !important;
+  transform: rotate(45deg) !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)) !important;
+  transition: transform .24s ease, border-color .16s ease !important;
+}
+
+.inventory-toggle:hover .inventory-toggle-arrow {
+  border-color: rgba(255,255,255,.96) !important;
+}
+
+.palette-wrap {
+  transition:
+    transform .28s cubic-bezier(.2, .9, .2, 1),
+    opacity .18s ease !important;
+  will-change: transform, opacity !important;
+}
+
+body.inventory-hidden .palette-wrap {
+  transform: translateX(-50%) translateY(calc(100% + 34px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.inventory-hidden .inventory-toggle {
+  bottom: 18px !important;
+  transform: translateX(-50%) !important;
+}
+
+body.inventory-hidden .inventory-toggle-arrow {
+  transform: rotate(225deg) !important;
+}
+
+body.inventory-hidden #mapCanvas,
+body.inventory-hidden canvas {
+  cursor: default !important;
+}
+
+@media (max-width: 760px) {
+  .inventory-toggle {
+    bottom: 214px !important;
+  }
+
+  body.inventory-hidden .inventory-toggle {
+    bottom: 16px !important;
+  }
+
+  .inventory-toggle-arrow {
+    width: 14px !important;
+    height: 14px !important;
+    border-right-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+}
