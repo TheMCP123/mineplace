@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=47" />
+  <link rel="stylesheet" href="/styles.css?v=48" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -40,14 +40,18 @@
     </div>
   </div>
 
+  <button id="coordsTeleportBtn" class="hud coords-teleport-btn" type="button" aria-label="Go to coordinates" title="Go to coordinates">
+    <img src="/coord-icon.png" alt="">
+  </button>
+
   <div class="hud hud-auth" id="authBox">
     <button id="loginBtn">Login with Discord</button>
   </div>
 
   <div class="hud map-actions">
     <button id="helpBtn" class="small-btn help-btn" type="button">?</button>
-    <button id="viewMapBtn" class="small-btn" type="button">View PNG</button>
-    <button id="downloadMapBtn" class="small-btn" type="button">Download PNG</button>
+    <button id="viewMapBtn" class="small-btn" type="button">View Map</button>
+    <button id="downloadMapBtn" class="small-btn" type="button">Download Map</button>
   </div>
 <button id="inventoryToggleBtn" class="inventory-toggle" type="button" aria-label="Hide inventory" title="Hide inventory"><span class="inventory-toggle-arrow" aria-hidden="true"></span></button>
 <div class="palette-wrap">
@@ -57,6 +61,32 @@
     </div>
     <div id="palette" class="palette"></div>
     <input id="inventorySlider" class="inventory-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Inventory scroll" />
+  </div>
+
+
+  <div id="coordsTeleportModal" class="sheet-modal hidden">
+    <div class="sheet-card coords-card">
+      <div class="sheet-head">
+        <strong>Go to coordinates</strong>
+        <button id="coordsTeleportCloseBtn" class="small-btn" type="button">Close</button>
+      </div>
+
+      <div class="coords-form">
+        <label>
+          X
+          <input id="coordsTeleportX" class="admin-input" type="number" min="0" max="499" step="1" placeholder="0-499">
+        </label>
+
+        <label>
+          Z
+          <input id="coordsTeleportZ" class="admin-input" type="number" min="0" max="499" step="1" placeholder="0-499">
+        </label>
+
+        <button id="coordsTeleportGoBtn" class="small-btn primary" type="button">Go</button>
+      </div>
+
+      <div class="sheet-note">Map limit: X 0-499 · Z 0-499</div>
+    </div>
   </div>
 
   <div id="inspectModal" class="sheet-modal hidden">
@@ -222,11 +252,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 47</div>
+    <div class="site-version">Version 48</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=47"></script>
+  <script src="/app.js?v=48"></script>
 </body>
 </html>

@@ -2301,3 +2301,81 @@ body.inventory-hidden canvas {
     border-bottom-width: 3px !important;
   }
 }
+
+
+/* Version 48: X/Z coordinate teleport */
+.coords-teleport-btn {
+  position: fixed !important;
+  left: 14px !important;
+  top: 64px !important;
+  width: 42px !important;
+  height: 42px !important;
+  padding: 9px !important;
+  border: 1px solid rgba(255,255,255,.11) !important;
+  border-radius: 999px !important;
+  background: rgba(13, 19, 19, .90) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.28) !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+  transition: transform .14s ease, background .14s ease, opacity .14s ease !important;
+}
+
+.coords-teleport-btn:hover {
+  transform: translateY(-1px) !important;
+  background: rgba(20, 31, 25, .96) !important;
+}
+
+.coords-teleport-btn img {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain !important;
+  display: block !important;
+  opacity: .95 !important;
+  pointer-events: none !important;
+}
+
+.coords-card {
+  width: min(420px, calc(100vw - 28px));
+}
+
+.coords-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.coords-form label {
+  display: grid;
+  gap: 6px;
+  color: rgba(255,255,255,.68);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.coords-form input {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .coords-teleport-btn {
+    left: 10px !important;
+    top: 62px !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 8px !important;
+  }
+
+  .coords-teleport-btn img {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .coords-form {
+    grid-template-columns: 1fr;
+  }
+}

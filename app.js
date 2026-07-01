@@ -37,6 +37,12 @@ const adminBan1dBtnEl = document.getElementById("adminBan1dBtn");
 const adminBan7dBtnEl = document.getElementById("adminBan7dBtn");
 const adminBanForeverBtnEl = document.getElementById("adminBanForeverBtn");
 const adminUnbanBtnEl = document.getElementById("adminUnbanBtn");
+const coordsTeleportBtnEl = document.getElementById("coordsTeleportBtn");
+const coordsTeleportModalEl = document.getElementById("coordsTeleportModal");
+const coordsTeleportCloseBtnEl = document.getElementById("coordsTeleportCloseBtn");
+const coordsTeleportGoBtnEl = document.getElementById("coordsTeleportGoBtn");
+const coordsTeleportXEl = document.getElementById("coordsTeleportX");
+const coordsTeleportZEl = document.getElementById("coordsTeleportZ");
 const coordsEl = document.getElementById("coords");
 const zoomLabel = document.getElementById("zoomLabel");
 const authBox = document.getElementById("authBox");
@@ -2313,6 +2319,60 @@ function toggleInventoryHidden() {
 inventoryToggleBtnEl?.addEventListener("click", toggleInventoryHidden);
 
 
+
+function openCoordsTeleportModal() {
+  if (!coordsTeleportModalEl) return;
+
+  const centerTileX = Math.max(0, Math.min(MAP_SIZE - 1, Math.round(camera.x / TILE_SIZE)));
+  const centerTileZ = Math.max(0, Math.min(MAP_SIZE - 1, Math.round(camera.y / TILE_SIZE)));
+
+  if (coordsTeleportXEl) coordsTeleportXEl.value = String(centerTileX);
+  if (coordsTeleportZEl) coordsTeleportZEl.value = String(centerTileZ);
+
+  coordsTeleportModalEl.classList.remove("hidden");
+  setTimeout(() => coordsTeleportXEl?.focus(), 30);
+}
+
+function closeCoordsTeleportModal() {
+  coordsTeleportModalEl?.classList.add("hidden");
+}
+
+function goToCoordinates() {
+  const x = Math.floor(Number(coordsTeleportXEl?.value));
+  const z = Math.floor(Number(coordsTeleportZEl?.value));
+
+  if (!Number.isFinite(x) || !Number.isFinite(z)) {
+    showToast("Enter X and Z");
+    return;
+  }
+
+  if (x < 0 || z < 0 || x >= MAP_SIZE || z >= MAP_SIZE) {
+    showToast(`Limit: 0-${MAP_SIZE - 1}`);
+    return;
+  }
+
+  camera.x = x * TILE_SIZE + TILE_SIZE / 2;
+  camera.y = z * TILE_SIZE + TILE_SIZE / 2;
+  clampCamera();
+  scheduleDraw();
+  closeCoordsTeleportModal();
+  showToast(`Moved to X ${x} · Z ${z}`);
+}
+
+coordsTeleportBtnEl?.addEventListener("click", openCoordsTeleportModal);
+coordsTeleportCloseBtnEl?.addEventListener("click", closeCoordsTeleportModal);
+coordsTeleportGoBtnEl?.addEventListener("click", goToCoordinates);
+coordsTeleportModalEl?.addEventListener("click", e => {
+  if (e.target === coordsTeleportModalEl) closeCoordsTeleportModal();
+});
+coordsTeleportXEl?.addEventListener("keydown", e => {
+  if (e.key === "Enter") goToCoordinates();
+});
+coordsTeleportZEl?.addEventListener("keydown", e => {
+  if (e.key === "Enter") goToCoordinates();
+});
+
+
 function openHelpModal() {
   helpModalEl?.classList.remove("hidden");
 }
@@ -2401,7 +2461,7 @@ canvas.addEventListener('pointerdown', e => {
 
 canvas.addEventListener('pointermove', e => {
   const tile = screenToTile(e.clientX, e.clientY);
-  coordsEl.textContent = `X ${tile.x} · Y ${tile.y}`;
+  coordsEl.textContent = `X ${tile.x} · Z ${tile.y}`;
 
   if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
 
@@ -2505,7 +2565,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 47;
+const MINEPLACE_VERSION = 48;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -2656,7 +2716,7 @@ function openInspectModal(data, x, y) {
   inspectModalEl?.classList.remove("hidden");
 
   if (inspectCoordsEl) {
-    inspectCoordsEl.textContent = `X ${x} · Y ${y}`;
+    inspectCoordsEl.textContent = `X ${x} · Z ${y}`;
   }
 
   const username = data?.username || "Nobody yet";
@@ -2748,7 +2808,7 @@ function openReportModal(username = "", context = null) {
 
   if (reportContextNoteEl) {
     reportContextNoteEl.textContent = context
-      ? `Context: X ${context.x} · Y ${context.y}`
+      ? `Context: X ${context.x} · Z ${context.y}`
       : "Manual report";
   }
 
@@ -2954,7 +3014,7 @@ function renderAdminReports(reports) {
           · Reporter: <strong>${escapeHtml(report.reporter_username || "Unknown")}</strong>
         </div>
         <div class="report-sub">
-          ${report.x !== null && report.y !== null ? `X ${report.x} · Y ${report.y} · ` : ""}${new Date(report.created_at).toLocaleString()}
+          ${report.x !== null && report.y !== null ? `X ${report.x} · Z ${report.y} · ` : ""}${new Date(report.created_at).toLocaleString()}
         </div>
         <div class="report-details">${escapeHtml(report.details || "No extra details.")}</div>
       </div>
