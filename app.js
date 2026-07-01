@@ -1051,6 +1051,7 @@ let selectedBlock = DEFAULT_GRID_BLOCK;
 let filteredBlockDefs = [...BLOCK_DEFS];
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
+let pointerDrag = null;
 let spaceDown = false;
 let currentUser = null;
 let currentProfile = null;
@@ -2163,40 +2164,96 @@ downloadMapBtnEl?.addEventListener("click", downloadMapPng);
 
 canvas.addEventListener('contextmenu', e => {
   e.preventDefault();
-  const t = screenToTile(e.clientX, e.clientY);
-  inspectBlock(t.x, t.y);
 });
 
 canvas.addEventListener('pointerdown', e => {
   unlockPlaceSound();
-  const shouldPan = e.button === 1 || spaceDown;
-  if (shouldPan) {
-    isPanning = true;
-    panStart = { x: e.clientX, y: e.clientY, camX: camera.x, camY: camera.y };
-    canvas.setPointerCapture(e.pointerId);
-    
-    return;
-  }
-  if (e.button === 0) {
-    const t = screenToTile(e.clientX, e.clientY);
-    placeAt(t.x, t.y);
-  }
+
+  const tile = screenToTile(e.clientX, e.clientY);
+
+  pointerDrag = {
+    pointerId: e.pointerId,
+    button: e.button,
+    startX: e.clientX,
+    startY: e.clientY,
+    startTileX: tile.x,
+    startTileY: tile.y,
+    camX: camera.x,
+    camY: camera.y,
+    moved: false
+  };
+
+  isPanning = true;
+  panStart = {
+    x: e.clientX,
+    y: e.clientY,
+    camX: camera.x,
+    camY: camera.y
+  };
+
+  canvas.setPointerCapture(e.pointerId);
+  e.preventDefault();
 });
 
 canvas.addEventListener('pointermove', e => {
   const tile = screenToTile(e.clientX, e.clientY);
   coordsEl.textContent = `X ${tile.x} · Y ${tile.y}`;
-  if (isPanning) {
-    camera.x = panStart.camX - (e.clientX - panStart.x) / camera.zoom;
-    camera.y = panStart.camY - (e.clientY - panStart.y) / camera.zoom;
+
+  if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
+
+  const dx = e.clientX - pointerDrag.startX;
+  const dy = e.clientY - pointerDrag.startY;
+  const distance = Math.hypot(dx, dy);
+
+  if (distance > 4) {
+    pointerDrag.moved = true;
+  }
+
+  if (pointerDrag.moved) {
+    camera.x = pointerDrag.camX - dx / camera.zoom;
+    camera.y = pointerDrag.camY - dy / camera.zoom;
     clampCamera();
     scheduleDraw();
   }
 });
 
-canvas.addEventListener('pointerup', () => {
+canvas.addEventListener('pointerup', e => {
+  if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) {
+    isPanning = false;
+    return;
+  }
+
+  const wasClick = !pointerDrag.moved;
+  const button = pointerDrag.button;
+  const tileX = pointerDrag.startTileX;
+  const tileY = pointerDrag.startTileY;
+
+  pointerDrag = null;
   isPanning = false;
-  
+
+  try {
+    canvas.releasePointerCapture(e.pointerId);
+  } catch {}
+
+  if (!wasClick) return;
+
+  if (button === 0) {
+    placeAt(tileX, tileY);
+    return;
+  }
+
+  if (button === 2) {
+    inspectBlock(tileX, tileY);
+  }
+});
+
+canvas.addEventListener('pointercancel', e => {
+  pointerDrag = null;
+  isPanning = false;
+
+  try {
+    canvas.releasePointerCapture(e.pointerId);
+  } catch {}
 });
 
 canvas.addEventListener('wheel', e => {
@@ -2229,7 +2286,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 31;
+const MINEPLACE_VERSION = 32;
 const REPORT_REASON_OPTIONS = [
   "Inappropriate Art",
   "Inappropriate Username",
