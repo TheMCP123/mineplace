@@ -2345,14 +2345,16 @@ function easeInOutCubic(t) {
     : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function animateCameraTo(targetX, targetY) {
+function animateCameraTo(targetX, targetY, targetZoom = camera.zoom) {
   cameraTeleportAnimation = {
     fromX: camera.x,
     fromY: camera.y,
+    fromZoom: camera.zoom,
     toX: targetX,
     toY: targetY,
+    targetZoom,
     startedAt: performance.now(),
-    duration: 620
+    duration: 720
   };
 
   requestAnimationFrame(stepCameraTeleport);
@@ -2367,6 +2369,7 @@ function stepCameraTeleport(now) {
 
   camera.x = anim.fromX + (anim.toX - anim.fromX) * eased;
   camera.y = anim.fromY + (anim.toY - anim.fromY) * eased;
+  camera.zoom = anim.fromZoom + (anim.targetZoom - anim.fromZoom) * eased;
 
   clampCamera();
   scheduleDraw();
@@ -2376,6 +2379,7 @@ function stepCameraTeleport(now) {
   } else {
     camera.x = anim.toX;
     camera.y = anim.toY;
+    camera.zoom = anim.targetZoom;
     clampCamera();
     cameraTeleportAnimation = null;
     scheduleDraw();
@@ -2401,8 +2405,8 @@ function goToCoordinates() {
   const targetZ = z * TILE_SIZE + TILE_SIZE / 2;
 
   closeCoordsTeleportModal();
-  animateCameraTo(targetX, targetZ);
-  showToast(`Moving to X ${x} · Z ${z}`);
+  animateCameraTo(targetX, targetZ, 2.5);
+  showToast(`Moving to X ${x} · Z ${z} · Zoom 2.50x`);
 }
 
 coordsTeleportBtnEl?.addEventListener("click", openCoordsTeleportModal);
@@ -2611,7 +2615,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 50;
+const MINEPLACE_VERSION = 51;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [

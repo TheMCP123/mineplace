@@ -2662,3 +2662,60 @@ button.small-btn:hover,
     width: 100% !important;
   }
 }
+
+
+/* Version 51: coords button fixed exactly to right of coords bubble */
+.coords-teleport-btn {
+  position: fixed !important;
+  top: 16px !important;
+  /* coords bubble starts at 14px and is about 252px wide; keep button directly after it */
+  left: 280px !important;
+  right: auto !important;
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  padding: 10px !important;
+  margin: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(64, 101, 49, .92) !important;
+  border: 1px solid rgba(141, 220, 129, .26) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.20) !important;
+  z-index: 25 !important;
+  display: grid !important;
+  place-items: center !important;
+  transform: none !important;
+}
+
+.coords-teleport-btn:hover {
+  background: rgba(75, 118, 58, .98) !important;
+  transform: translateY(-1px) !important;
+}
+
+.coords-teleport-btn img {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* keep the coords bubble stable so the icon cannot drift */
+.hud.coords,
+#coords {
+  white-space: nowrap !important;
+}
+
+@media (max-width: 760px) {
+  .coords-teleport-btn {
+    top: 16px !important;
+    left: 232px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 8px !important;
+  }
+
+  .coords-teleport-btn img {
+    width: 21px !important;
+    height: 21px !important;
+  }
+}
