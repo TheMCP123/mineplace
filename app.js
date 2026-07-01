@@ -10,6 +10,7 @@ const paletteEl = document.getElementById("palette");
 const blockSearchEl = document.getElementById("blockSearch");
 const blockCountEl = document.getElementById("blockCount");
 const inventorySliderEl = document.getElementById("inventorySlider");
+const inventoryToggleBtnEl = document.getElementById("inventoryToggleBtn");
 const viewMapBtnEl = document.getElementById("viewMapBtn");
 const downloadMapBtnEl = document.getElementById("downloadMapBtn");
 const helpBtnEl = document.getElementById("helpBtn");
@@ -1069,6 +1070,7 @@ let isPlacing = false;
 let toastTimer = null;
 let exportInProgress = false;
 let rechargeSyncInProgress = false;
+let inventoryHidden = localStorage.getItem('mineplace_inventory_hidden') === '1';
 
 let playerState = normalizePlayerState({
   blocks: 0,
@@ -2022,6 +2024,7 @@ function draw() {
 }
 
 async function placeAt(tileX, tileY) {
+  if (inventoryHidden) return;
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
   const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
@@ -2292,6 +2295,24 @@ downloadMapBtnEl?.addEventListener("click", downloadMapPng);
 
 
 
+
+function applyInventoryHiddenState() {
+  document.body.classList.toggle("inventory-hidden", inventoryHidden);
+  if (inventoryToggleBtnEl) {
+    inventoryToggleBtnEl.setAttribute("aria-label", inventoryHidden ? "Show inventory" : "Hide inventory");
+    inventoryToggleBtnEl.title = inventoryHidden ? "Show inventory" : "Hide inventory";
+  }
+}
+
+function toggleInventoryHidden() {
+  inventoryHidden = !inventoryHidden;
+  localStorage.setItem("mineplace_inventory_hidden", inventoryHidden ? "1" : "0");
+  applyInventoryHiddenState();
+}
+
+inventoryToggleBtnEl?.addEventListener("click", toggleInventoryHidden);
+
+
 function openHelpModal() {
   helpModalEl?.classList.remove("hidden");
 }
@@ -2331,6 +2352,7 @@ function selectInventoryBlock(blockId) {
 }
 
 function pickBlockAt(tileX, tileY) {
+  if (inventoryHidden) return;
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
   const blockId = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
@@ -2420,11 +2442,13 @@ canvas.addEventListener('pointerup', e => {
   if (!wasClick) return;
 
   if (button === 0) {
+    if (inventoryHidden) return;
     placeAt(tileX, tileY);
     return;
   }
 
   if (button === 1) {
+    if (inventoryHidden) return;
     pickBlockAt(tileX, tileY);
     return;
   }
@@ -2481,7 +2505,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 45;
+const MINEPLACE_VERSION = 46;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -3312,6 +3336,7 @@ function updateVisibleVersion() {
 }
 
 (async function init() {
+  applyInventoryHiddenState();
   await loadTextures();
   await initAuth();
   buildPalette();

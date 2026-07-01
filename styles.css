@@ -2144,3 +2144,62 @@ textarea,
     font-size: 17px !important;
   }
 }
+
+
+/* Version 46: hide inventory toggle */
+.inventory-toggle {
+  position: fixed;
+  left: 50%;
+  bottom: 196px;
+  width: 34px;
+  height: 24px;
+  transform: translateX(-50%);
+  z-index: 24;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: rgba(13, 19, 19, .92);
+  color: rgba(255,255,255,.92);
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 950;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0,0,0,.28);
+  transition: transform .18s ease, bottom .24s ease, background .18s ease;
+}
+
+.inventory-toggle:hover {
+  background: rgba(20, 31, 25, .96);
+}
+
+.palette-wrap {
+  transition: transform .24s ease, opacity .18s ease;
+  will-change: transform, opacity;
+}
+
+body.inventory-hidden .palette-wrap {
+  transform: translateX(-50%) translateY(calc(100% + 22px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.inventory-hidden .inventory-toggle {
+  bottom: 82px;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+body.inventory-hidden #mapCanvas,
+body.inventory-hidden canvas {
+  cursor: default !important;
+}
+
+@media (max-width: 760px) {
+  .inventory-toggle {
+    bottom: 220px;
+  }
+
+  body.inventory-hidden .inventory-toggle {
+    bottom: 74px;
+  }
+}
