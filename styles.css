@@ -1676,3 +1676,109 @@ textarea,
     font-size: 12px !important;
   }
 }
+
+
+/* Version 39 help + modal animations */
+.help-action {
+  left: 14px;
+  bottom: 66px;
+  padding: 6px;
+  border-radius: 999px;
+  z-index: 15;
+}
+
+.help-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 950;
+  display: grid;
+  place-items: center;
+}
+
+.sheet-modal,
+.admin-modal {
+  animation: modalFadeIn .16s ease both;
+}
+
+.sheet-card,
+.admin-card {
+  animation: modalPopIn .18s cubic-bezier(.2, .9, .25, 1.15) both;
+  transform-origin: center;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.help-card {
+  width: min(500px, calc(100vw - 28px));
+}
+
+.help-list {
+  display: grid;
+  gap: 10px;
+}
+
+.help-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  background: rgba(255,255,255,.055);
+}
+
+.mouse-key {
+  min-width: 54px;
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: rgba(123,216,143,.16);
+  border: 1px solid rgba(123,216,143,.24);
+  color: rgba(255,255,255,.95);
+  font-weight: 950;
+  text-align: center;
+  font-size: 12px;
+}
+
+.help-row strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 950;
+  color: rgba(255,255,255,.95);
+  margin-bottom: 2px;
+}
+
+.help-row span {
+  display: block;
+  color: rgba(255,255,255,.62);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+@media (max-width: 760px) {
+  .help-action {
+    left: 10px;
+    bottom: 128px;
+  }
+
+  .help-row {
+    grid-template-columns: 52px 1fr;
+  }
+}

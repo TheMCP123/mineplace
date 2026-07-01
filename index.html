@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=38" />
+  <link rel="stylesheet" href="/styles.css?v=40" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -47,6 +47,11 @@
   <div class="hud map-actions">
     <button id="viewMapBtn" class="small-btn" type="button">View PNG</button>
     <button id="downloadMapBtn" class="small-btn" type="button">Download PNG</button>
+  </div>
+
+
+  <div class="hud help-action">
+    <button id="helpBtn" class="small-btn help-btn" type="button">?</button>
   </div>
 
   <div class="palette-wrap">
@@ -120,6 +125,58 @@
     </div>
   </div>
 
+
+  <div id="helpModal" class="sheet-modal hidden">
+    <div class="sheet-card help-card">
+      <div class="sheet-head">
+        <strong>Mouse Controls</strong>
+        <button id="helpCloseBtn" class="small-btn" type="button">Close</button>
+      </div>
+
+      <div class="help-list">
+        <div class="help-row">
+          <div class="mouse-key">LMB</div>
+          <div>
+            <strong>Place block</strong>
+            <span>Click a tile to place the selected inventory block.</span>
+          </div>
+        </div>
+
+        <div class="help-row">
+          <div class="mouse-key">RMB</div>
+          <div>
+            <strong>Block info / report</strong>
+            <span>Right click a placed block to see who placed it and report if needed.</span>
+          </div>
+        </div>
+
+        <div class="help-row">
+          <div class="mouse-key">MMB</div>
+          <div>
+            <strong>Pick block</strong>
+            <span>Middle click a block on the map to select it in your inventory.</span>
+          </div>
+        </div>
+
+        <div class="help-row">
+          <div class="mouse-key">Drag</div>
+          <div>
+            <strong>Move map</strong>
+            <span>Hold any mouse button and move to pan the map.</span>
+          </div>
+        </div>
+
+        <div class="help-row">
+          <div class="mouse-key">Wheel</div>
+          <div>
+            <strong>Zoom</strong>
+            <span>Scroll to zoom in or out.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="adminModal" class="admin-modal hidden">
     <div class="admin-card">
       <div class="admin-head">
@@ -169,11 +226,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 38</div>
+    <div class="site-version">Version 40</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=38"></script>
+  <script src="/app.js?v=40"></script>
 </body>
 </html>

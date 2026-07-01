@@ -12,6 +12,9 @@ const blockCountEl = document.getElementById("blockCount");
 const inventorySliderEl = document.getElementById("inventorySlider");
 const viewMapBtnEl = document.getElementById("viewMapBtn");
 const downloadMapBtnEl = document.getElementById("downloadMapBtn");
+const helpBtnEl = document.getElementById("helpBtn");
+const helpModalEl = document.getElementById("helpModal");
+const helpCloseBtnEl = document.getElementById("helpCloseBtn");
 const onlineBubbleEl = document.getElementById("onlineBubble");
 const onlineCountEl = document.getElementById("onlineCount");
 const onlineListEl = document.getElementById("onlineList");
@@ -2288,6 +2291,59 @@ viewMapBtnEl?.addEventListener("click", viewMapPng);
 downloadMapBtnEl?.addEventListener("click", downloadMapPng);
 
 
+
+function openHelpModal() {
+  helpModalEl?.classList.remove("hidden");
+}
+
+function closeHelpModal() {
+  helpModalEl?.classList.add("hidden");
+}
+
+function selectInventoryBlock(blockId) {
+  if (!blockId || blockId === "__cursor__") return false;
+
+  const block = BLOCK_DEFS.find(item => item.id === blockId);
+  if (!block) {
+    showToast("Block is not in inventory");
+    return false;
+  }
+
+  selectedBlock = blockId;
+
+  const currentQuery = normalizeSearch(blockSearchEl?.value || "");
+  const visibleNow = filteredBlockDefs.some(item => item.id === blockId);
+
+  if (blockSearchEl && currentQuery && !visibleNow) {
+    blockSearchEl.value = "";
+    filterBlocks();
+  } else {
+    buildPalette();
+  }
+
+  requestAnimationFrame(() => {
+    const selectedEl = paletteEl?.querySelector(".block.selected");
+    selectedEl?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  });
+
+  showToast(`Selected ${block.name}`);
+  return true;
+}
+
+function pickBlockAt(tileX, tileY) {
+  if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
+
+  const blockId = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
+  selectInventoryBlock(blockId);
+}
+
+helpBtnEl?.addEventListener("click", openHelpModal);
+helpCloseBtnEl?.addEventListener("click", closeHelpModal);
+helpModalEl?.addEventListener("click", e => {
+  if (e.target === helpModalEl) closeHelpModal();
+});
+
+
 canvas.addEventListener('contextmenu', e => {
   e.preventDefault();
 });
@@ -2368,6 +2424,11 @@ canvas.addEventListener('pointerup', e => {
     return;
   }
 
+  if (button === 1) {
+    pickBlockAt(tileX, tileY);
+    return;
+  }
+
   if (button === 2) {
     inspectBlock(tileX, tileY);
   }
@@ -2420,7 +2481,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 38;
+const MINEPLACE_VERSION = 40;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
