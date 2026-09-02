@@ -3390,3 +3390,167 @@ html {
   background: rgba(91, 139, 101, .78) !important;
   border-color: rgba(178, 236, 189, .34) !important;
 }
+
+
+/* Version 62: interaction polish */
+
+/* Download control is ONE pill. Arrow has no own bubble. */
+.download-map-control {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  background: rgba(29, 44, 37, .96) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.download-map-control .download-main-btn {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  padding-right: 34px !important;
+}
+
+#downloadFormatBtn.download-format-btn {
+  position: absolute !important;
+  right: 9px !important;
+  top: 50% !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: rgba(255,255,255,.72) !important;
+  display: grid !important;
+  place-items: center !important;
+  z-index: 5 !important;
+}
+
+#downloadFormatBtn.download-format-btn:hover,
+#downloadFormatBtn.download-format-btn:focus,
+#downloadFormatBtn.download-format-btn:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+}
+
+#downloadFormatBtn .download-chevron {
+  width: 13px !important;
+  height: 13px !important;
+  display: block !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .18s ease !important;
+}
+
+#downloadFormatBtn.open .download-chevron {
+  transform: rotate(180deg) !important;
+}
+
+/* Toast lives above inventory; when inventory is hidden it drops lower. */
+.toast {
+  bottom: 214px !important;
+}
+
+body.inventory-hidden .toast {
+  bottom: 76px !important;
+}
+
+/* Block hover never lifts/moves. Only green outline. */
+.block,
+.block:hover,
+.block.selected {
+  transform: none !important;
+}
+
+.block:hover {
+  border-color: rgba(123,216,143,.72) !important;
+  box-shadow: 0 0 0 2px rgba(123,216,143,.16) !important;
+  z-index: 1 !important;
+}
+
+.block.selected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(123,216,143,.22) !important;
+  z-index: 2 !important;
+}
+
+/* No hover movement on Go to Coordinates. */
+.coords-teleport-btn,
+.coords-teleport-btn:hover,
+.coords-row .coords-teleport-btn:hover,
+#coordsTeleportBtn.coords-teleport-btn:hover {
+  transform: none !important;
+  transition: background .14s ease, opacity .14s ease !important;
+}
+
+/* Inventory scroll indicator, not a selectable range. */
+.inventory-slider {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  pointer-events: none !important;
+  height: 10px !important;
+  margin-top: 8px !important;
+  background: transparent !important;
+  accent-color: transparent !important;
+}
+
+.inventory-slider::-webkit-slider-runnable-track {
+  height: 5px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.13) !important;
+  border: 0 !important;
+}
+
+.inventory-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  width: 42px !important;
+  height: 9px !important;
+  margin-top: -2px !important;
+  border-radius: 999px !important;
+  background: rgba(123,216,143,.82) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.inventory-slider::-moz-range-track {
+  height: 5px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.13) !important;
+  border: 0 !important;
+}
+
+.inventory-slider::-moz-range-progress {
+  background: transparent !important;
+}
+
+.inventory-slider::-moz-range-thumb {
+  width: 42px !important;
+  height: 9px !important;
+  border-radius: 999px !important;
+  background: rgba(123,216,143,.82) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  .toast {
+    bottom: 206px !important;
+  }
+
+  body.inventory-hidden .toast {
+    bottom: 68px !important;
+  }
+}

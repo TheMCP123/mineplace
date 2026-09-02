@@ -2303,10 +2303,10 @@ function buildPalette() {
 
 blockSearchEl?.addEventListener("input", filterBlocks);
 
-inventorySliderEl?.addEventListener("input", () => {
-  if (!paletteEl || !inventorySliderEl) return;
-  paletteEl.scrollLeft = Number(inventorySliderEl.value || 0);
-});
+
+
+inventorySliderEl?.addEventListener("pointerdown", e => e.preventDefault());
+inventorySliderEl?.addEventListener("keydown", e => e.preventDefault());
 
 paletteEl?.addEventListener("wheel", e => {
   if (!paletteEl) return;
@@ -2814,7 +2814,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 61;
+const MINEPLACE_VERSION = 62;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -3490,7 +3490,7 @@ async function inspectBlock(tileX, tileY) {
     p_y: tileY
   });
 
-  if (error || !data?.exists) {
+  if (error || !data?.exists || String(data?.username || "").toLowerCase() === "nobody yet") {
     showToast("Nobody yet");
     return;
   }
