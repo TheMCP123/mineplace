@@ -52,7 +52,8 @@ const blocksLabel = document.getElementById("blocksLabel");
 const rechargeLabel = document.getElementById("rechargeLabel");
 const blocksFill = document.getElementById("blocksFill");
 
-const MAP_SIZE = 500;
+const MAP_SIZE = 1001;
+const MAP_RADIUS = 500;
 const TILE_SIZE = 16;
 const DEFAULT_GRID_BLOCK = "grass_top";
 const MIN_ZOOM = 0.08;
@@ -1088,6 +1089,19 @@ let playerState = normalizePlayerState({
   next_splash_at: null
 });
 
+
+
+function internalToWorldCoord(value) {
+  return Number(value) - MAP_RADIUS;
+}
+
+function worldToInternalCoord(value) {
+  return Number(value) + MAP_RADIUS;
+}
+
+function isValidWorldCoord(value) {
+  return Number.isInteger(value) && value >= -MAP_RADIUS && value <= MAP_RADIUS;
+}
 
 function normalizePlayerState(state) {
   const raw = state || {};
@@ -2472,8 +2486,10 @@ inventoryToggleBtnEl?.addEventListener("click", toggleInventoryHidden);
 function openCoordsTeleportModal() {
   if (!coordsTeleportModalEl) return;
 
-  const centerTileX = Math.max(0, Math.min(MAP_SIZE - 1, Math.round(camera.x / TILE_SIZE)));
-  const centerTileZ = Math.max(0, Math.min(MAP_SIZE - 1, Math.round(camera.y / TILE_SIZE)));
+  const centerInternalX = Math.max(0, Math.min(MAP_SIZE - 1, Math.floor(camera.x / TILE_SIZE)));
+  const centerInternalZ = Math.max(0, Math.min(MAP_SIZE - 1, Math.floor(camera.y / TILE_SIZE)));
+  const centerTileX = internalToWorldCoord(centerInternalX);
+  const centerTileZ = internalToWorldCoord(centerInternalZ);
 
   if (coordsTeleportXEl) coordsTeleportXEl.value = String(centerTileX);
   if (coordsTeleportZEl) coordsTeleportZEl.value = String(centerTileZ);
@@ -2536,21 +2552,24 @@ function stepCameraTeleport(now) {
 
 
 function goToCoordinates() {
-  const x = Math.floor(Number(coordsTeleportXEl?.value));
-  const z = Math.floor(Number(coordsTeleportZEl?.value));
+  const x = Math.trunc(Number(coordsTeleportXEl?.value));
+  const z = Math.trunc(Number(coordsTeleportZEl?.value));
 
   if (!Number.isFinite(x) || !Number.isFinite(z)) {
     showToast("Enter X and Z");
     return;
   }
 
-  if (x < 0 || z < 0 || x >= MAP_SIZE || z >= MAP_SIZE) {
-    showToast(`Limit: 0-${MAP_SIZE - 1}`);
+  if (!isValidWorldCoord(x) || !isValidWorldCoord(z)) {
+    showToast(`Limit: -${MAP_RADIUS} to ${MAP_RADIUS}`);
     return;
   }
 
-  const targetX = x * TILE_SIZE + TILE_SIZE / 2;
-  const targetZ = z * TILE_SIZE + TILE_SIZE / 2;
+  const internalX = worldToInternalCoord(x);
+  const internalZ = worldToInternalCoord(z);
+
+  const targetX = internalX * TILE_SIZE + TILE_SIZE / 2;
+  const targetZ = internalZ * TILE_SIZE + TILE_SIZE / 2;
 
   closeCoordsTeleportModal();
   animateCameraTo(targetX, targetZ, 2.5);
@@ -2658,7 +2677,7 @@ canvas.addEventListener('pointerdown', e => {
 
 canvas.addEventListener('pointermove', e => {
   const tile = screenToTile(e.clientX, e.clientY);
-  coordsEl.textContent = `X ${tile.x} · Z ${tile.y}`;
+  coordsEl.textContent = `X ${internalToWorldCoord(tile.x)} · Z ${internalToWorldCoord(tile.y)}`;
 
   if (!pointerDrag || pointerDrag.pointerId !== e.pointerId) return;
 
@@ -2762,7 +2781,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 58;
+const MINEPLACE_VERSION = 59;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -2913,7 +2932,7 @@ function openInspectModal(data, x, y) {
   inspectModalEl?.classList.remove("hidden");
 
   if (inspectCoordsEl) {
-    inspectCoordsEl.textContent = `X ${x} · Z ${y}`;
+    inspectCoordsEl.textContent = `X ${internalToWorldCoord(x)} · Z ${internalToWorldCoord(y)}`;
   }
 
   const username = data?.username || "Nobody yet";
@@ -2992,7 +3011,7 @@ function openReportModal(username = "", context = null) {
 
   if (reportContextNoteEl) {
     reportContextNoteEl.textContent = context
-      ? `Context: X ${context.x} · Z ${context.y}`
+      ? `Context: X ${internalToWorldCoord(context.x)} · Z ${internalToWorldCoord(context.y)}`
       : "Manual report";
   }
 
@@ -3198,7 +3217,7 @@ function renderAdminReports(reports) {
           · Reporter: <strong>${escapeHtml(report.reporter_username || "Unknown")}</strong>
         </div>
         <div class="report-sub">
-          ${report.x !== null && report.y !== null ? `X ${report.x} · Z ${report.y} · ` : ""}${new Date(report.created_at).toLocaleString()}
+          ${report.x !== null && report.y !== null ? `X ${internalToWorldCoord(report.x)} · Z ${internalToWorldCoord(report.y)} · ` : ""}${new Date(report.created_at).toLocaleString()}
         </div>
         <div class="report-details">${escapeHtml(report.details || "No extra details.")}</div>
       </div>

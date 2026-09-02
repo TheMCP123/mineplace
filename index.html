@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=58" />
+  <link rel="stylesheet" href="/styles.css?v=59" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -60,7 +60,6 @@
         <button type="button" data-format="png">PNG</button>
         <button type="button" data-format="jpeg">JPG</button>
         <button type="button" data-format="webp">WEBP</button>
-        <button type="button" data-format="bmp">BMP</button>
       </div>
     </div>
   </div>
@@ -85,18 +84,18 @@
       <div class="coords-form">
         <label>
           X
-          <input id="coordsTeleportX" class="admin-input" type="number" min="0" max="499" step="1" placeholder="0-499">
+          <input id="coordsTeleportX" class="admin-input" type="number" min="-500" max="500" step="1" placeholder="-500 to 500">
         </label>
 
         <label>
           Z
-          <input id="coordsTeleportZ" class="admin-input" type="number" min="0" max="499" step="1" placeholder="0-499">
+          <input id="coordsTeleportZ" class="admin-input" type="number" min="-500" max="500" step="1" placeholder="-500 to 500">
         </label>
 
         <button id="coordsTeleportGoBtn" class="small-btn primary coords-go-btn" type="button">Go</button>
       </div>
 
-      <div class="sheet-note coords-limit-note">Allowed range: X 0-499 · Z 0-499</div>
+      <div class="sheet-note coords-limit-note">Allowed range: X -500…500 · Z -500…500</div>
     </div>
   </div>
 
@@ -263,11 +262,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 58</div>
+    <div class="site-version">Version 59</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=58"></script>
+  <script src="/app.js?v=59"></script>
 </body>
 </html>
