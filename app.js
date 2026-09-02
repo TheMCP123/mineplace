@@ -57,6 +57,7 @@ const blocksFill = document.getElementById("blocksFill");
 const MAP_SIZE = 1001;
 const MAP_RADIUS = 500;
 const TILE_SIZE = 16;
+const MAX_EXPORT_DIMENSION = 8192;
 const DEFAULT_GRID_BLOCK = "grass_top";
 const MIN_ZOOM = 0.08;
 const MAX_ZOOM = 8;
@@ -3175,9 +3176,14 @@ async function createMapBlob(format = selectedDownloadFormat) {
   await loadTextures();
 
     const rows = await getAllMapBlocksForExport();
+    const exportTileSize = Math.max(
+      1,
+      Math.min(TILE_SIZE, Math.floor(MAX_EXPORT_DIMENSION / MAP_SIZE))
+    );
+
     const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = MAP_SIZE * TILE_SIZE;
-    exportCanvas.height = MAP_SIZE * TILE_SIZE;
+    exportCanvas.width = MAP_SIZE * exportTileSize;
+    exportCanvas.height = MAP_SIZE * exportTileSize;
 
     const exportCtx = exportCanvas.getContext("2d", {
       alpha: false,
@@ -3191,7 +3197,7 @@ async function createMapBlob(format = selectedDownloadFormat) {
     for (let y = 0; y < MAP_SIZE; y++) {
       for (let x = 0; x < MAP_SIZE; x++) {
         if (defaultTexture) {
-          exportCtx.drawImage(defaultTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          exportCtx.drawImage(defaultTexture, x * exportTileSize, y * exportTileSize, exportTileSize, exportTileSize);
         }
       }
 
@@ -3209,7 +3215,7 @@ async function createMapBlob(format = selectedDownloadFormat) {
       const texture = resolveTextureAsset(row.block_id);
       if (!texture) continue;
 
-      drawBlockTexture(exportCtx, texture, row.block_id, row.x, row.y, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, row.rotation ?? 0);
+      drawBlockTexture(exportCtx, texture, row.block_id, row.x, row.y, row.x * exportTileSize, row.y * exportTileSize, exportTileSize, exportTileSize, row.rotation ?? 0);
 
       if (i % 2000 === 0) {
         await nextFrame();
@@ -3269,18 +3275,47 @@ async function downloadMap() {
 }
 
 async function viewMapPng() {
+  // Open immediately while still inside the user's click event,
+  // otherwise browsers may block the new tab after async rendering.
+  const previewWindow = window.open("", "_blank");
+
+  if (previewWindow) {
+    previewWindow.document.title = "Mineplace Map";
+    previewWindow.document.body.style.margin = "0";
+    previewWindow.document.body.style.background = "#111";
+    previewWindow.document.body.style.color = "#fff";
+    previewWindow.document.body.style.fontFamily = "system-ui, sans-serif";
+    previewWindow.document.body.style.display = "grid";
+    previewWindow.document.body.style.placeItems = "center";
+    previewWindow.document.body.style.minHeight = "100vh";
+    previewWindow.document.body.textContent = "Rendering Mineplace map…";
+  }
+
   const result = await createMapBlob("png");
   const blob = result?.blob || null;
+
   if (!blob) {
+    if (previewWindow) previewWindow.close();
     showToast("Map export failed");
     return;
   }
 
   const url = URL.createObjectURL(blob);
-  window.open(url, "_blank", "noopener,noreferrer");
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
-  showToast("Opened PNG");
+  if (previewWindow) {
+    previewWindow.location.replace(url);
+  } else {
+    // Popup blocked fallback.
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  setTimeout(() => URL.revokeObjectURL(url), 120_000);
 }
 
 
@@ -3679,7 +3714,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 69;
+const MINEPLACE_VERSION = 70;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
