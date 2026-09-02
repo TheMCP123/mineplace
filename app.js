@@ -2814,7 +2814,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 60;
+const MINEPLACE_VERSION = 61;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -3561,7 +3561,7 @@ async function placeAt(tileX, tileY) {
 
   if (error) {
     console.error(`${rpcName} error`, error);
-    showToast("Could not place block");
+    showToast(error?.message || "Could not place block");
     return;
   }
 

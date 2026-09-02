@@ -3255,3 +3255,138 @@ html {
 .online-bubble {
   top: 70px !important;
 }
+
+
+/* Version 61: final UI consistency + arrow + spacing */
+
+/* Online a bit higher */
+.online-bubble {
+  top: 64px !important;
+}
+
+/* Coordinate button: same position, smaller size */
+.coords-row .coords-teleport-btn,
+#coordsTeleportBtn.coords-teleport-btn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  padding: 8px !important;
+}
+
+.coords-row .coords-teleport-btn img,
+#coordsTeleportBtn.coords-teleport-btn img {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Match modal UI to the main Mineplace bubble style */
+.sheet-modal,
+.admin-modal {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.sheet-card,
+.admin-card,
+.coords-card,
+.help-card {
+  background: rgba(55, 91, 42, .94) !important;
+  border: 1px solid rgba(154, 220, 134, .16) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.22) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 26px !important;
+}
+
+.sheet-card .admin-input,
+.sheet-card input,
+.sheet-card textarea,
+.sheet-card select,
+.admin-card .admin-input,
+.admin-card input,
+.admin-card textarea,
+.admin-card select {
+  background: rgba(17, 35, 16, .86) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.95) !important;
+  box-shadow: none !important;
+}
+
+.sheet-card .small-btn,
+.admin-card .small-btn,
+.coords-card .small-btn,
+.help-card .small-btn {
+  background: rgba(29, 44, 37, .96) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: none !important;
+}
+
+.sheet-card .small-btn:hover,
+.admin-card .small-btn:hover,
+.coords-card .small-btn:hover,
+.help-card .small-btn:hover {
+  background: rgba(39, 57, 47, .98) !important;
+}
+
+/* Download arrow: truly no bubble */
+#downloadFormatBtn.download-format-btn {
+  all: unset !important;
+  position: absolute !important;
+  right: 9px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  color: rgba(255,255,255,.72) !important;
+  z-index: 6 !important;
+}
+
+#downloadFormatBtn.download-format-btn:hover {
+  color: rgba(255,255,255,1) !important;
+}
+
+#downloadFormatBtn .download-chevron {
+  width: 13px !important;
+  height: 13px !important;
+  display: block !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .18s ease !important;
+}
+
+#downloadFormatBtn.open .download-chevron {
+  transform: rotate(180deg) !important;
+}
+
+/* Format menu same style as normal Mineplace bubbles */
+.download-format-menu {
+  background: rgba(55, 91, 42, .96) !important;
+  border: 1px solid rgba(154, 220, 134, .16) !important;
+  box-shadow: 0 14px 30px rgba(0,0,0,.22) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 16px !important;
+  padding: 6px !important;
+}
+
+.download-format-menu button {
+  background: rgba(29, 44, 37, .94) !important;
+  border: 0 !important;
+  color: rgba(255,255,255,.92) !important;
+  border-radius: 11px !important;
+}
+
+.download-format-menu button:hover {
+  background: rgba(39, 57, 47, .98) !important;
+}
+
+/* Admin tool clearer */
+.admin-paint-tool-btn.active {
+  background: rgba(91, 139, 101, .78) !important;
+  border-color: rgba(178, 236, 189, .34) !important;
+}
