@@ -2310,6 +2310,10 @@ function getDownloadFormatInfo(format) {
     return { format: "webp", mime: "image/webp", extension: "webp", quality: 0.92 };
   }
 
+  if (normalized === "bmp") {
+    return { format: "bmp", mime: "image/bmp", extension: "bmp", quality: undefined };
+  }
+
   return { format: "png", mime: "image/png", extension: "png", quality: undefined };
 }
 
@@ -2413,7 +2417,10 @@ async function viewMapPng() {
 
 downloadFormatBtnEl?.addEventListener("click", e => {
   e.stopPropagation();
+
+  const willOpen = downloadFormatMenuEl?.classList.contains("hidden");
   downloadFormatMenuEl?.classList.toggle("hidden");
+  downloadFormatBtnEl?.classList.toggle("open", !!willOpen);
 });
 
 downloadFormatMenuEl?.addEventListener("click", e => {
@@ -2428,12 +2435,14 @@ downloadFormatMenuEl?.addEventListener("click", e => {
   }
 
   downloadFormatMenuEl.classList.add("hidden");
+  downloadFormatBtnEl?.classList.remove("open");
 });
 
 document.addEventListener("click", e => {
   if (!downloadFormatMenuEl || !downloadFormatBtnEl) return;
   if (downloadFormatMenuEl.contains(e.target) || downloadFormatBtnEl.contains(e.target)) return;
   downloadFormatMenuEl.classList.add("hidden");
+  downloadFormatBtnEl?.classList.remove("open");
 });
 
 viewMapBtnEl?.addEventListener("click", viewMapPng);
@@ -2753,7 +2762,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 57;
+const MINEPLACE_VERSION = 58;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
