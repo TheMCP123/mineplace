@@ -39,6 +39,7 @@ const adminBan1dBtnEl = document.getElementById("adminBan1dBtn");
 const adminBan7dBtnEl = document.getElementById("adminBan7dBtn");
 const adminBanForeverBtnEl = document.getElementById("adminBanForeverBtn");
 const adminUnbanBtnEl = document.getElementById("adminUnbanBtn");
+const adminPaintToolBtnEl = document.getElementById("adminPaintToolBtn");
 const coordsTeleportBtnEl = document.getElementById("coordsTeleportBtn");
 const coordsTeleportModalEl = document.getElementById("coordsTeleportModal");
 const coordsTeleportCloseBtnEl = document.getElementById("coordsTeleportCloseBtn");
@@ -1081,6 +1082,7 @@ let exportInProgress = false;
 let selectedDownloadFormat = "png";
 let rechargeSyncInProgress = false;
 let inventoryHidden = localStorage.getItem('mineplace_inventory_hidden') === '1';
+let adminPaintMode = false;
 
 let playerState = normalizePlayerState({
   blocks: 0,
@@ -1496,6 +1498,31 @@ adminUnbanBtnEl?.addEventListener("click", adminUnbanUser);
 
 
 
+
+function refreshAdminPaintToolButton() {
+  if (!adminPaintToolBtnEl) return;
+
+  adminPaintToolBtnEl.textContent = adminPaintMode
+    ? "Admin Paint Tool: ON"
+    : "Take Admin Paint Tool";
+
+  adminPaintToolBtnEl.classList.toggle("active", adminPaintMode);
+}
+
+function setAdminPaintMode(enabled) {
+  adminPaintMode = !!enabled && isAdmin();
+  refreshAdminPaintToolButton();
+
+  if (adminPaintMode) {
+    showToast("Admin Paint Tool enabled");
+    closeAdminPanel();
+  }
+}
+
+adminPaintToolBtnEl?.addEventListener("click", () => {
+  setAdminPaintMode(!adminPaintMode);
+});
+
 function isCurrentUserBanned() {
   if (!currentProfile?.is_banned) return false;
   if (!currentProfile.banned_until) return true;
@@ -1677,6 +1704,8 @@ async function logout() {
 
   currentUser = null;
   currentProfile = null;
+  adminPaintMode = false;
+  refreshAdminPaintToolButton();
   stopOnlinePresence();
   closeReportModal();
   closeInspectModal();
@@ -2328,6 +2357,10 @@ function getDownloadFormatInfo(format) {
     return { format: "bmp", mime: "image/bmp", extension: "bmp", quality: undefined };
   }
 
+  if (normalized === "avif") {
+    return { format: "avif", mime: "image/avif", extension: "avif", quality: 0.9 };
+  }
+
   return { format: "png", mime: "image/png", extension: "png", quality: undefined };
 }
 
@@ -2781,7 +2814,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 59;
+const MINEPLACE_VERSION = 60;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -3422,6 +3455,11 @@ function renderAuth() {
   userWrap.appendChild(username);
   authBox.appendChild(userWrap);
 
+  
+  if (!isAdmin() && adminPaintMode) {
+    setAdminPaintMode(false);
+  }
+
   if (isAdmin()) {
     const adminBtn = document.createElement("button");
     adminBtn.id = "adminBtn";
@@ -3492,6 +3530,7 @@ async function loadPlayerState() {
 }
 
 async function placeAt(tileX, tileY) {
+  if (inventoryHidden) return;
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
   const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
@@ -3508,7 +3547,11 @@ async function placeAt(tileX, tileY) {
   if (isPlacing) return;
   isPlacing = true;
 
-  const { data, error } = await supabaseClient.rpc("place_block", {
+  const rpcName = adminPaintMode && isAdmin()
+    ? "admin_paint_block"
+    : "place_block";
+
+  const { data, error } = await supabaseClient.rpc(rpcName, {
     p_x: tileX,
     p_y: tileY,
     p_block_id: selectedBlock
@@ -3517,7 +3560,7 @@ async function placeAt(tileX, tileY) {
   isPlacing = false;
 
   if (error) {
-    console.error("place_block error", error);
+    console.error(`${rpcName} error`, error);
     showToast("Could not place block");
     return;
   }
@@ -3533,7 +3576,13 @@ async function placeAt(tileX, tileY) {
     }
 
     if (code === "user_banned") {
-      showToast(data.banned_until ? `Banned until ${new Date(data.banned_until).toLocaleString()}` : "Account banned");
+      showToast("Account banned");
+      return;
+    }
+
+    if (code === "forbidden") {
+      setAdminPaintMode(false);
+      showToast("Admin only");
       return;
     }
 
@@ -3543,15 +3592,16 @@ async function placeAt(tileX, tileY) {
 
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
-    addPlacementAnimation?.(data.block.x, data.block.y);
+    addPlacementAnimation?.(data.block.x, data.block.y, data.block.block_id);
   }
 
-  if (!data.no_change) {
-    playPlaceSound();
+  if (!data.no_change) playPlaceSound();
+
+  if (!adminPaintMode && data.state) {
+    playerState = normalizePlayerState(data.state);
+    renderBlocks();
   }
 
-  if (data.state) playerState = normalizePlayerState(data.state);
-  renderBlocks();
   scheduleDraw();
 }
 

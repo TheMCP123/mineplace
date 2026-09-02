@@ -3091,3 +3091,167 @@ html {
     top: 64px !important;
   }
 }
+
+
+/* Version 60: Liquid Glass UI + final download control */
+
+/* No dimming behind any GUI */
+.sheet-modal,
+.admin-modal {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Liquid Glass cards */
+.sheet-card,
+.admin-card,
+.coords-card,
+.help-card {
+  background: linear-gradient(
+    145deg,
+    rgba(42, 48, 45, .56),
+    rgba(23, 28, 26, .42)
+  ) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.10) !important;
+  backdrop-filter: blur(22px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.25) !important;
+}
+
+/* Inputs inside glass UI */
+.sheet-card .admin-input,
+.sheet-card input,
+.sheet-card textarea,
+.sheet-card select,
+.admin-card .admin-input,
+.admin-card input,
+.admin-card textarea,
+.admin-card select {
+  background: rgba(22, 27, 25, .54) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.94) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.sheet-card .admin-input:focus,
+.sheet-card input:focus,
+.sheet-card textarea:focus,
+.admin-card .admin-input:focus,
+.admin-card input:focus,
+.admin-card textarea:focus {
+  border-color: rgba(255,255,255,.28) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.07) !important;
+}
+
+/* Buttons in GUI should be glass, not green */
+.sheet-card .small-btn,
+.admin-card .small-btn,
+.coords-card .small-btn,
+.help-card .small-btn {
+  background: rgba(48, 57, 53, .66) !important;
+  border: 1px solid rgba(255,255,255,.13) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.sheet-card .small-btn:hover,
+.admin-card .small-btn:hover,
+.coords-card .small-btn:hover,
+.help-card .small-btn:hover {
+  background: rgba(64, 74, 69, .76) !important;
+}
+
+/* Final: arrow is transparent, absolutely over main pill, NO bubble */
+.download-map-control {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.download-map-control .download-main-btn {
+  padding-right: 34px !important;
+  border-radius: 999px !important;
+}
+
+#downloadFormatBtn.download-format-btn {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: rgba(255,255,255,.74) !important;
+  display: grid !important;
+  place-items: center !important;
+  z-index: 4 !important;
+}
+
+#downloadFormatBtn.download-format-btn:hover {
+  background: transparent !important;
+  color: rgba(255,255,255,1) !important;
+}
+
+#downloadFormatBtn .download-chevron {
+  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .20s cubic-bezier(.2,.8,.2,1) !important;
+}
+
+#downloadFormatBtn.open .download-chevron {
+  transform: rotate(180deg) !important;
+}
+
+/* Format chooser as a single liquid-glass popover */
+.download-format-menu {
+  right: 0 !important;
+  left: auto !important;
+  bottom: calc(100% + 8px) !important;
+  min-width: 132px !important;
+  padding: 7px !important;
+  border-radius: 18px !important;
+  background: rgba(35, 42, 39, .66) !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  box-shadow: 0 16px 42px rgba(0,0,0,.28) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+}
+
+.download-format-menu button {
+  background: transparent !important;
+  border: 0 !important;
+  color: rgba(255,255,255,.90) !important;
+  border-radius: 11px !important;
+}
+
+.download-format-menu button:hover {
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* Admin paint button */
+.admin-paint-tool-btn.active {
+  background: rgba(111, 163, 126, .30) !important;
+  border-color: rgba(166, 235, 185, .38) !important;
+}
+
+/* Slightly separated online bubble, not too far */
+.online-bubble {
+  top: 70px !important;
+}
