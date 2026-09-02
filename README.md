@@ -1,7 +1,2 @@
-# Mineplace [BETA]
-
-Basically r/place but Minecraft!
-
-1. Upon logging in with discord you get 50 blocks.
-
-2. Place down any block you choose, and draw anything you want!
+<h1 align="center"># Mineplace [BETA]</h1>
+<p align="center"><em>Basically r/place but Minecraft!</em></p>
