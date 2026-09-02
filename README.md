@@ -1,2 +1,2 @@
-<h1 align="center">Mineplace [BETA]</h1>
+<h1 align="center">Mineplace.org</h1>
 <p align="center"><em>r/place but Minecraft!</em></p>
