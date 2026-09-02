@@ -952,6 +952,642 @@ const BLOCK_DEFS = [
     "name": "Water",
     "src": "/textures/water.png",
     "sort_order": 1480
+  },
+  {
+    "id": "amethyst_block",
+    "name": "Amethyst Block",
+    "src": "/textures/amethyst_block.png",
+    "sort_order": 1490
+  },
+  {
+    "id": "ancient_debris_side",
+    "name": "Ancient Debris Side",
+    "src": "/textures/ancient_debris_side.png",
+    "sort_order": 1500
+  },
+  {
+    "id": "ancient_debris_top",
+    "name": "Ancient Debris Top",
+    "src": "/textures/ancient_debris_top.png",
+    "sort_order": 1510
+  },
+  {
+    "id": "bamboo_block",
+    "name": "Bamboo Block",
+    "src": "/textures/bamboo_block.png",
+    "sort_order": 1520
+  },
+  {
+    "id": "bamboo_block_top",
+    "name": "Bamboo Block Top",
+    "src": "/textures/bamboo_block_top.png",
+    "sort_order": 1530
+  },
+  {
+    "id": "barrel_bottom",
+    "name": "Barrel Bottom",
+    "src": "/textures/barrel_bottom.png",
+    "sort_order": 1540
+  },
+  {
+    "id": "barrel_side",
+    "name": "Barrel Side",
+    "src": "/textures/barrel_side.png",
+    "sort_order": 1550
+  },
+  {
+    "id": "barrel_top",
+    "name": "Barrel Top",
+    "src": "/textures/barrel_top.png",
+    "sort_order": 1560
+  },
+  {
+    "id": "barrel_top_open",
+    "name": "Barrel Top Open",
+    "src": "/textures/barrel_top_open.png",
+    "sort_order": 1570
+  },
+  {
+    "id": "basalt_side",
+    "name": "Basalt Side",
+    "src": "/textures/basalt_side.png",
+    "sort_order": 1580
+  },
+  {
+    "id": "basalt_top",
+    "name": "Basalt Top",
+    "src": "/textures/basalt_top.png",
+    "sort_order": 1590
+  },
+  {
+    "id": "black_shulker_box",
+    "name": "Black Shulker Box",
+    "src": "/textures/black_shulker_box.png",
+    "sort_order": 1600
+  },
+  {
+    "id": "black_terracotta",
+    "name": "Black Terracotta",
+    "src": "/textures/black_terracotta.png",
+    "sort_order": 1610
+  },
+  {
+    "id": "blue_ice",
+    "name": "Blue Ice",
+    "src": "/textures/blue_ice.png",
+    "sort_order": 1620
+  },
+  {
+    "id": "blue_shulker_box",
+    "name": "Blue Shulker Box",
+    "src": "/textures/blue_shulker_box.png",
+    "sort_order": 1630
+  },
+  {
+    "id": "blue_terracotta",
+    "name": "Blue Terracotta",
+    "src": "/textures/blue_terracotta.png",
+    "sort_order": 1640
+  },
+  {
+    "id": "brown_shulker_box",
+    "name": "Brown Shulker Box",
+    "src": "/textures/brown_shulker_box.png",
+    "sort_order": 1650
+  },
+  {
+    "id": "brown_terracotta",
+    "name": "Brown Terracotta",
+    "src": "/textures/brown_terracotta.png",
+    "sort_order": 1660
+  },
+  {
+    "id": "chiseled_copper",
+    "name": "Chiseled Copper",
+    "src": "/textures/chiseled_copper.png",
+    "sort_order": 1670
+  },
+  {
+    "id": "chiseled_red_sandstone",
+    "name": "Chiseled Red Sandstone",
+    "src": "/textures/chiseled_red_sandstone.png",
+    "sort_order": 1680
+  },
+  {
+    "id": "chiseled_resin_bricks",
+    "name": "Chiseled Resin Bricks",
+    "src": "/textures/chiseled_resin_bricks.png",
+    "sort_order": 1690
+  },
+  {
+    "id": "chiseled_sandstone",
+    "name": "Chiseled Sandstone",
+    "src": "/textures/chiseled_sandstone.png",
+    "sort_order": 1700
+  },
+  {
+    "id": "chiseled_sulfur",
+    "name": "Chiseled Sulfur",
+    "src": "/textures/chiseled_sulfur.png",
+    "sort_order": 1710
+  },
+  {
+    "id": "coal_block",
+    "name": "Coal Block",
+    "src": "/textures/coal_block.png",
+    "sort_order": 1720
+  },
+  {
+    "id": "cobblestone",
+    "name": "Cobblestone",
+    "src": "/textures/cobblestone.png",
+    "sort_order": 1730
+  },
+  {
+    "id": "copper_block",
+    "name": "Copper Block",
+    "src": "/textures/copper_block.png",
+    "sort_order": 1740
+  },
+  {
+    "id": "crimson_stem",
+    "name": "Crimson Stem",
+    "src": "/textures/crimson_stem.png",
+    "sort_order": 1750
+  },
+  {
+    "id": "crimson_stem_top",
+    "name": "Crimson Stem Top",
+    "src": "/textures/crimson_stem_top.png",
+    "sort_order": 1760
+  },
+  {
+    "id": "cut_red_sandstone",
+    "name": "Cut Red Sandstone",
+    "src": "/textures/cut_red_sandstone.png",
+    "sort_order": 1770
+  },
+  {
+    "id": "cut_sandstone",
+    "name": "Cut Sandstone",
+    "src": "/textures/cut_sandstone.png",
+    "sort_order": 1780
+  },
+  {
+    "id": "cyan_shulker_box",
+    "name": "Cyan Shulker Box",
+    "src": "/textures/cyan_shulker_box.png",
+    "sort_order": 1790
+  },
+  {
+    "id": "cyan_terracotta",
+    "name": "Cyan Terracotta",
+    "src": "/textures/cyan_terracotta.png",
+    "sort_order": 1800
+  },
+  {
+    "id": "diamond_block",
+    "name": "Diamond Block",
+    "src": "/textures/diamond_block.png",
+    "sort_order": 1810
+  },
+  {
+    "id": "diorite",
+    "name": "Diorite",
+    "src": "/textures/diorite.png",
+    "sort_order": 1820
+  },
+  {
+    "id": "frosted_ice_0",
+    "name": "Frosted Ice 0",
+    "src": "/textures/frosted_ice_0.png",
+    "sort_order": 1830
+  },
+  {
+    "id": "frosted_ice_1",
+    "name": "Frosted Ice 1",
+    "src": "/textures/frosted_ice_1.png",
+    "sort_order": 1840
+  },
+  {
+    "id": "frosted_ice_2",
+    "name": "Frosted Ice 2",
+    "src": "/textures/frosted_ice_2.png",
+    "sort_order": 1850
+  },
+  {
+    "id": "frosted_ice_3",
+    "name": "Frosted Ice 3",
+    "src": "/textures/frosted_ice_3.png",
+    "sort_order": 1860
+  },
+  {
+    "id": "gold_block",
+    "name": "Gold Block",
+    "src": "/textures/gold_block.png",
+    "sort_order": 1870
+  },
+  {
+    "id": "granite",
+    "name": "Granite",
+    "src": "/textures/granite.png",
+    "sort_order": 1880
+  },
+  {
+    "id": "gray_shulker_box",
+    "name": "Gray Shulker Box",
+    "src": "/textures/gray_shulker_box.png",
+    "sort_order": 1890
+  },
+  {
+    "id": "gray_terracotta",
+    "name": "Gray Terracotta",
+    "src": "/textures/gray_terracotta.png",
+    "sort_order": 1900
+  },
+  {
+    "id": "green_shulker_box",
+    "name": "Green Shulker Box",
+    "src": "/textures/green_shulker_box.png",
+    "sort_order": 1910
+  },
+  {
+    "id": "green_terracotta",
+    "name": "Green Terracotta",
+    "src": "/textures/green_terracotta.png",
+    "sort_order": 1920
+  },
+  {
+    "id": "ice",
+    "name": "Ice",
+    "src": "/textures/ice.png",
+    "sort_order": 1930
+  },
+  {
+    "id": "iron_block",
+    "name": "Iron Block",
+    "src": "/textures/iron_block.png",
+    "sort_order": 1940
+  },
+  {
+    "id": "jukebox_side",
+    "name": "Jukebox Side",
+    "src": "/textures/jukebox_side.png",
+    "sort_order": 1950
+  },
+  {
+    "id": "jukebox_top",
+    "name": "Jukebox Top",
+    "src": "/textures/jukebox_top.png",
+    "sort_order": 1960
+  },
+  {
+    "id": "lapis_block",
+    "name": "Lapis Block",
+    "src": "/textures/lapis_block.png",
+    "sort_order": 1970
+  },
+  {
+    "id": "light_blue_shulker_box",
+    "name": "Light Blue Shulker Box",
+    "src": "/textures/light_blue_shulker_box.png",
+    "sort_order": 1980
+  },
+  {
+    "id": "light_blue_terracotta",
+    "name": "Light Blue Terracotta",
+    "src": "/textures/light_blue_terracotta.png",
+    "sort_order": 1990
+  },
+  {
+    "id": "light_gray_shulker_box",
+    "name": "Light Gray Shulker Box",
+    "src": "/textures/light_gray_shulker_box.png",
+    "sort_order": 2000
+  },
+  {
+    "id": "light_gray_terracotta",
+    "name": "Light Gray Terracotta",
+    "src": "/textures/light_gray_terracotta.png",
+    "sort_order": 2010
+  },
+  {
+    "id": "lime_shulker_box",
+    "name": "Lime Shulker Box",
+    "src": "/textures/lime_shulker_box.png",
+    "sort_order": 2020
+  },
+  {
+    "id": "lime_terracotta",
+    "name": "Lime Terracotta",
+    "src": "/textures/lime_terracotta.png",
+    "sort_order": 2030
+  },
+  {
+    "id": "magenta_shulker_box",
+    "name": "Magenta Shulker Box",
+    "src": "/textures/magenta_shulker_box.png",
+    "sort_order": 2040
+  },
+  {
+    "id": "magenta_terracotta",
+    "name": "Magenta Terracotta",
+    "src": "/textures/magenta_terracotta.png",
+    "sort_order": 2050
+  },
+  {
+    "id": "mossy_cobblestone",
+    "name": "Mossy Cobblestone",
+    "src": "/textures/mossy_cobblestone.png",
+    "sort_order": 2060
+  },
+  {
+    "id": "netherite_block",
+    "name": "Netherite Block",
+    "src": "/textures/netherite_block.png",
+    "sort_order": 2070
+  },
+  {
+    "id": "orange_shulker_box",
+    "name": "Orange Shulker Box",
+    "src": "/textures/orange_shulker_box.png",
+    "sort_order": 2080
+  },
+  {
+    "id": "orange_terracotta",
+    "name": "Orange Terracotta",
+    "src": "/textures/orange_terracotta.png",
+    "sort_order": 2090
+  },
+  {
+    "id": "packed_ice",
+    "name": "Packed Ice",
+    "src": "/textures/packed_ice.png",
+    "sort_order": 2100
+  },
+  {
+    "id": "pink_shulker_box",
+    "name": "Pink Shulker Box",
+    "src": "/textures/pink_shulker_box.png",
+    "sort_order": 2110
+  },
+  {
+    "id": "pink_terracotta",
+    "name": "Pink Terracotta",
+    "src": "/textures/pink_terracotta.png",
+    "sort_order": 2120
+  },
+  {
+    "id": "podzol_side",
+    "name": "Podzol Side",
+    "src": "/textures/podzol_side.png",
+    "sort_order": 2130
+  },
+  {
+    "id": "podzol_top",
+    "name": "Podzol Top",
+    "src": "/textures/podzol_top.png",
+    "sort_order": 2140
+  },
+  {
+    "id": "polished_basalt_side",
+    "name": "Polished Basalt Side",
+    "src": "/textures/polished_basalt_side.png",
+    "sort_order": 2150
+  },
+  {
+    "id": "polished_basalt_top",
+    "name": "Polished Basalt Top",
+    "src": "/textures/polished_basalt_top.png",
+    "sort_order": 2160
+  },
+  {
+    "id": "polished_diorite",
+    "name": "Polished Diorite",
+    "src": "/textures/polished_diorite.png",
+    "sort_order": 2170
+  },
+  {
+    "id": "polished_granite",
+    "name": "Polished Granite",
+    "src": "/textures/polished_granite.png",
+    "sort_order": 2180
+  },
+  {
+    "id": "polished_sulfur",
+    "name": "Polished Sulfur",
+    "src": "/textures/polished_sulfur.png",
+    "sort_order": 2190
+  },
+  {
+    "id": "potent_sulfur",
+    "name": "Potent Sulfur",
+    "src": "/textures/potent_sulfur.png",
+    "sort_order": 2200
+  },
+  {
+    "id": "purple_shulker_box",
+    "name": "Purple Shulker Box",
+    "src": "/textures/purple_shulker_box.png",
+    "sort_order": 2210
+  },
+  {
+    "id": "purple_terracotta",
+    "name": "Purple Terracotta",
+    "src": "/textures/purple_terracotta.png",
+    "sort_order": 2220
+  },
+  {
+    "id": "redstone_block",
+    "name": "Redstone Block",
+    "src": "/textures/redstone_block.png",
+    "sort_order": 2230
+  },
+  {
+    "id": "red_sand",
+    "name": "Red Sand",
+    "src": "/textures/red_sand.png",
+    "sort_order": 2240
+  },
+  {
+    "id": "red_sandstone",
+    "name": "Red Sandstone",
+    "src": "/textures/red_sandstone.png",
+    "sort_order": 2250
+  },
+  {
+    "id": "red_sandstone_bottom",
+    "name": "Red Sandstone Bottom",
+    "src": "/textures/red_sandstone_bottom.png",
+    "sort_order": 2260
+  },
+  {
+    "id": "red_sandstone_top",
+    "name": "Red Sandstone Top",
+    "src": "/textures/red_sandstone_top.png",
+    "sort_order": 2270
+  },
+  {
+    "id": "red_shulker_box",
+    "name": "Red Shulker Box",
+    "src": "/textures/red_shulker_box.png",
+    "sort_order": 2280
+  },
+  {
+    "id": "red_terracotta",
+    "name": "Red Terracotta",
+    "src": "/textures/red_terracotta.png",
+    "sort_order": 2290
+  },
+  {
+    "id": "resin_block",
+    "name": "Resin Block",
+    "src": "/textures/resin_block.png",
+    "sort_order": 2300
+  },
+  {
+    "id": "resin_bricks",
+    "name": "Resin Bricks",
+    "src": "/textures/resin_bricks.png",
+    "sort_order": 2310
+  },
+  {
+    "id": "sand",
+    "name": "Sand",
+    "src": "/textures/sand.png",
+    "sort_order": 2320
+  },
+  {
+    "id": "sandstone",
+    "name": "Sandstone",
+    "src": "/textures/sandstone.png",
+    "sort_order": 2330
+  },
+  {
+    "id": "sandstone_bottom",
+    "name": "Sandstone Bottom",
+    "src": "/textures/sandstone_bottom.png",
+    "sort_order": 2340
+  },
+  {
+    "id": "sandstone_top",
+    "name": "Sandstone Top",
+    "src": "/textures/sandstone_top.png",
+    "sort_order": 2350
+  },
+  {
+    "id": "shulker_box",
+    "name": "Shulker Box",
+    "src": "/textures/shulker_box.png",
+    "sort_order": 2360
+  },
+  {
+    "id": "smooth_basalt",
+    "name": "Smooth Basalt",
+    "src": "/textures/smooth_basalt.png",
+    "sort_order": 2370
+  },
+  {
+    "id": "soul_sand",
+    "name": "Soul Sand",
+    "src": "/textures/soul_sand.png",
+    "sort_order": 2380
+  },
+  {
+    "id": "stripped_crimson_stem",
+    "name": "Stripped Crimson Stem",
+    "src": "/textures/stripped_crimson_stem.png",
+    "sort_order": 2390
+  },
+  {
+    "id": "stripped_crimson_stem_top",
+    "name": "Stripped Crimson Stem Top",
+    "src": "/textures/stripped_crimson_stem_top.png",
+    "sort_order": 2400
+  },
+  {
+    "id": "stripped_warped_stem",
+    "name": "Stripped Warped Stem",
+    "src": "/textures/stripped_warped_stem.png",
+    "sort_order": 2410
+  },
+  {
+    "id": "stripped_warped_stem_top",
+    "name": "Stripped Warped Stem Top",
+    "src": "/textures/stripped_warped_stem_top.png",
+    "sort_order": 2420
+  },
+  {
+    "id": "sulfur",
+    "name": "Sulfur",
+    "src": "/textures/sulfur.png",
+    "sort_order": 2430
+  },
+  {
+    "id": "sulfur_bricks",
+    "name": "Sulfur Bricks",
+    "src": "/textures/sulfur_bricks.png",
+    "sort_order": 2440
+  },
+  {
+    "id": "terracotta",
+    "name": "Terracotta",
+    "src": "/textures/terracotta.png",
+    "sort_order": 2450
+  },
+  {
+    "id": "tnt_bottom",
+    "name": "TNT Bottom",
+    "src": "/textures/tnt_bottom.png",
+    "sort_order": 2460
+  },
+  {
+    "id": "tnt_side",
+    "name": "TNT Side",
+    "src": "/textures/tnt_side.png",
+    "sort_order": 2470
+  },
+  {
+    "id": "tnt_top",
+    "name": "TNT Top",
+    "src": "/textures/tnt_top.png",
+    "sort_order": 2480
+  },
+  {
+    "id": "warped_stem",
+    "name": "Warped Stem",
+    "src": "/textures/warped_stem.png",
+    "sort_order": 2490
+  },
+  {
+    "id": "warped_stem_top",
+    "name": "Warped Stem Top",
+    "src": "/textures/warped_stem_top.png",
+    "sort_order": 2500
+  },
+  {
+    "id": "white_shulker_box",
+    "name": "White Shulker Box",
+    "src": "/textures/white_shulker_box.png",
+    "sort_order": 2510
+  },
+  {
+    "id": "white_terracotta",
+    "name": "White Terracotta",
+    "src": "/textures/white_terracotta.png",
+    "sort_order": 2520
+  },
+  {
+    "id": "yellow_shulker_box",
+    "name": "Yellow Shulker Box",
+    "src": "/textures/yellow_shulker_box.png",
+    "sort_order": 2530
+  },
+  {
+    "id": "yellow_terracotta",
+    "name": "Yellow Terracotta",
+    "src": "/textures/yellow_terracotta.png",
+    "sort_order": 2540
   }
 ];
 const LEGACY_BLOCKS = {
@@ -1055,6 +1691,11 @@ const LEGACY_BLOCKS = {
   }
 };
 
+const VERTICAL_PATTERN_BLOCKS = new Set([
+  "warped_stem",
+  "crimson_stem"
+]);
+
 const BLOCKS = new Map(BLOCK_DEFS.map(block => [block.id, block]));
 const textureCache = new Map();
 const fallbackTextureCache = new Map();
@@ -1124,6 +1765,7 @@ const placementAnimations = new Map();
 let drawQueued = false;
 let lastWheelDrawAt = 0;
 let cameraTeleportAnimation = null;
+let hoverTile = null;
 
 function scheduleDraw() {
   if (drawQueued) return;
@@ -2008,6 +2650,28 @@ function clampCamera() {
   
 }
 
+
+function drawBlockTexture(ctx2d, texture, blockId, tileX, tileY, dx, dy, dw = TILE_SIZE, dh = TILE_SIZE) {
+  if (!texture) return;
+
+  if (
+    VERTICAL_PATTERN_BLOCKS.has(blockId) &&
+    texture.naturalWidth === 16 &&
+    texture.naturalHeight >= 80
+  ) {
+    const frameCount = Math.max(1, Math.floor(texture.naturalHeight / 16));
+    const frame = ((tileY % frameCount) + frameCount) % frameCount;
+    ctx2d.drawImage(
+      texture,
+      0, frame * 16, 16, 16,
+      dx, dy, dw, dh
+    );
+    return;
+  }
+
+  ctx2d.drawImage(texture, dx, dy, dw, dh);
+}
+
 function drawGrid(viewW, viewH) {
   const worldLeft = camera.x - viewW / 2 / camera.zoom;
   const worldTop = camera.y - viewH / 2 / camera.zoom;
@@ -2031,9 +2695,9 @@ function drawGrid(viewW, viewH) {
         if (scale !== 1) {
           const size = TILE_SIZE * scale;
           const offset = (TILE_SIZE - size) / 2;
-          ctx.drawImage(tex, x * TILE_SIZE + offset, y * TILE_SIZE + offset, size, size);
+          drawBlockTexture(ctx, tex, blockId, x, y, x * TILE_SIZE + offset, y * TILE_SIZE + offset, size, size);
         } else {
-          ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          drawBlockTexture(ctx, tex, blockId, x, y, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
       }
     }
@@ -2057,6 +2721,76 @@ function drawGrid(viewW, viewH) {
   ctx.strokeStyle = 'rgba(255,255,255,.28)';
   ctx.lineWidth = 2 / camera.zoom;
   ctx.strokeRect(0, 0, MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+}
+
+
+function setHoverTileFromPointer(clientX, clientY) {
+  const tile = screenToTile(clientX, clientY);
+
+  if (tile.x < 0 || tile.y < 0 || tile.x >= MAP_SIZE || tile.y >= MAP_SIZE) {
+    if (hoverTile) {
+      hoverTile = null;
+      scheduleDraw();
+    }
+    return;
+  }
+
+  if (!hoverTile || hoverTile.x !== tile.x || hoverTile.y !== tile.y) {
+    hoverTile = { x: tile.x, y: tile.y };
+    scheduleDraw();
+  }
+}
+
+function drawSelectedBlockPreview() {
+  if (
+    inventoryHidden ||
+    !hoverTile ||
+    isPanning ||
+    !selectedBlock ||
+    camera.zoom < 0.16
+  ) return;
+
+  const { x, y } = hoverTile;
+  if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE) return;
+
+  const tex = resolveTextureAsset(selectedBlock);
+  if (!tex) return;
+
+  const occupied = placed.has(key(x, y));
+  let alpha = 0.50;
+
+  if (occupied) {
+    alpha = 0.22 + ((Math.sin(performance.now() / 115) + 1) / 2) * 0.45;
+    scheduleDraw();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = false;
+  drawBlockTexture(
+    ctx,
+    tex,
+    selectedBlock,
+    x,
+    y,
+    x * TILE_SIZE,
+    y * TILE_SIZE,
+    TILE_SIZE,
+    TILE_SIZE
+  );
+
+  ctx.globalAlpha = occupied ? 0.92 : 0.72;
+  ctx.strokeStyle = occupied
+    ? "rgba(255,255,255,.88)"
+    : "rgba(123,216,143,.96)";
+  ctx.lineWidth = 1 / camera.zoom;
+  ctx.strokeRect(
+    x * TILE_SIZE + 0.5 / camera.zoom,
+    y * TILE_SIZE + 0.5 / camera.zoom,
+    TILE_SIZE - 1 / camera.zoom,
+    TILE_SIZE - 1 / camera.zoom
+  );
+  ctx.restore();
 }
 
 function draw() {
@@ -2108,7 +2842,7 @@ function draw() {
       if (drawTextureBlocks) {
         const tex = resolveTextureAsset(blockId);
         if (tex) {
-          ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          drawBlockTexture(ctx, tex, blockId, x, y, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
           continue;
         }
       }
@@ -2140,9 +2874,9 @@ function draw() {
       if (scale !== 1) {
         const size = TILE_SIZE * scale;
         const offset = (TILE_SIZE - size) / 2;
-        ctx.drawImage(tex, x * TILE_SIZE + offset, y * TILE_SIZE + offset, size, size);
+        drawBlockTexture(ctx, tex, blockId, x, y, x * TILE_SIZE + offset, y * TILE_SIZE + offset, size, size);
       } else {
-        ctx.drawImage(tex, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        drawBlockTexture(ctx, tex, blockId, x, y, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
     }
   }
@@ -2165,6 +2899,8 @@ function draw() {
 
     ctx.stroke();
   }
+
+  drawSelectedBlockPreview();
 
   ctx.restore();
   zoomLabel.textContent = `Zoom ${camera.zoom.toFixed(2)}x`;
@@ -2412,7 +3148,7 @@ async function createMapBlob(format = selectedDownloadFormat) {
       const texture = resolveTextureAsset(row.block_id);
       if (!texture) continue;
 
-      exportCtx.drawImage(texture, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      drawBlockTexture(exportCtx, texture, row.block_id, row.x, row.y, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
       if (i % 2000 === 0) {
         await nextFrame();
@@ -2709,6 +3445,7 @@ canvas.addEventListener('pointerdown', e => {
 });
 
 canvas.addEventListener('pointermove', e => {
+  setHoverTileFromPointer(e.clientX, e.clientY);
   const tile = screenToTile(e.clientX, e.clientY);
   coordsEl.textContent = `X ${internalToWorldCoord(tile.x)} · Z ${internalToWorldCoord(tile.y)}`;
 
@@ -2776,6 +3513,11 @@ canvas.addEventListener('pointercancel', e => {
   } catch {}
 });
 
+canvas.addEventListener('pointerleave', () => {
+  hoverTile = null;
+  scheduleDraw();
+});
+
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
 
@@ -2814,7 +3556,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 62;
+const MINEPLACE_VERSION = 63;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [

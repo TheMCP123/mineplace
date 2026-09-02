@@ -3554,3 +3554,146 @@ body.inventory-hidden .toast {
     bottom: 68px !important;
   }
 }
+
+
+/* Version 63 final UI / preview / scrollbar fixes */
+
+/* Download arrow has ZERO bubble of its own. */
+.download-map-control {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.download-map-control .download-main-btn {
+  padding-right: 33px !important;
+  border-radius: 999px !important;
+}
+
+button#downloadFormatBtn.download-format-btn {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+}
+
+button#downloadFormatBtn.download-format-btn:hover,
+button#downloadFormatBtn.download-format-btn:focus,
+button#downloadFormatBtn.download-format-btn:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  transform: translateY(-50%) !important;
+}
+
+button#downloadFormatBtn .download-chevron-clean {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-right: 2px solid rgba(255,255,255,.84) !important;
+  border-bottom: 2px solid rgba(255,255,255,.84) !important;
+  transform: translate(-50%, -62%) rotate(45deg) !important;
+  transform-origin: center center !important;
+  transition: transform .18s ease !important;
+  pointer-events: none !important;
+}
+
+button#downloadFormatBtn.open .download-chevron-clean {
+  transform: translate(-50%, -38%) rotate(225deg) !important;
+}
+
+/* Hide fake range slider completely and use the actual palette scrollbar. */
+.inventory-slider {
+  display: none !important;
+}
+
+.palette {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding-bottom: 10px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(123,216,143,.82) rgba(255,255,255,.12) !important;
+}
+
+.palette::-webkit-scrollbar {
+  display: block !important;
+  height: 7px !important;
+}
+
+.palette::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.12) !important;
+  border-radius: 999px !important;
+}
+
+.palette::-webkit-scrollbar-thumb {
+  background: rgba(123,216,143,.82) !important;
+  border-radius: 999px !important;
+}
+
+.palette::-webkit-scrollbar-thumb:hover {
+  background: rgba(123,216,143,1) !important;
+}
+
+/* Keep block hover static, only outline. */
+.block,
+.block:hover,
+.block.selected {
+  transform: none !important;
+}
+
+.block:hover {
+  border-color: rgba(123,216,143,.76) !important;
+  box-shadow: 0 0 0 2px rgba(123,216,143,.16) !important;
+}
+
+/* Go-to-coordinates button never moves on hover. */
+.coords-teleport-btn,
+.coords-teleport-btn:hover,
+.coords-row .coords-teleport-btn:hover,
+#coordsTeleportBtn.coords-teleport-btn:hover {
+  transform: none !important;
+  transition: background .14s ease, opacity .14s ease !important;
+}
+
+/* Toast positioning logic. */
+.toast {
+  bottom: 220px !important;
+}
+
+body.inventory-hidden .toast {
+  bottom: 78px !important;
+}
+
+@media (max-width: 760px) {
+  .toast {
+    bottom: 210px !important;
+  }
+  body.inventory-hidden .toast {
+    bottom: 70px !important;
+  }
+}
