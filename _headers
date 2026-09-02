@@ -1,27 +1,11 @@
-# Mineplace cache stability
-/
-  Cache-Control: no-cache, no-store, must-revalidate
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
 /app.js
   Cache-Control: no-cache, no-store, must-revalidate
-
-/styles.css
-  Cache-Control: no-cache, no-store, must-revalidate
-
-/textures/*
-  Cache-Control: public, max-age=300, must-revalidate
-
-/ui/*
-  Cache-Control: public, max-age=300, must-revalidate
-
-/place.mp3
-  Cache-Control: public, max-age=300, must-revalidate
-
-/favicon.ico
-  Cache-Control: public, max-age=300, must-revalidate
-
-/favicon.png
-  Cache-Control: public, max-age=300, must-revalidate

@@ -1234,6 +1234,19 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+
+function safeImageUrl(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(String(value), window.location.origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
+
 function getDiscordProfile(sessionUser) {
   const meta = sessionUser?.user_metadata || {};
   return {
@@ -1474,7 +1487,7 @@ function renderOnlinePlayers(players) {
   if (!currentUser || isCurrentUserBanned()) {
     onlineBubbleEl.classList.add("hidden");
     onlineCountEl.textContent = "0 online";
-    onlineListEl.innerHTML = "";
+    onlineListEl.replaceChildren();
     return;
   }
 
@@ -1482,9 +1495,7 @@ function renderOnlinePlayers(players) {
 
   for (const player of players) {
     if (!player?.user_id || player.is_banned) continue;
-    if (!unique.has(player.user_id)) {
-      unique.set(player.user_id, player);
-    }
+    if (!unique.has(player.user_id)) unique.set(player.user_id, player);
   }
 
   const list = [...unique.values()]
@@ -1493,31 +1504,41 @@ function renderOnlinePlayers(players) {
 
   onlineBubbleEl.classList.remove("hidden");
   onlineCountEl.textContent = `${list.length} online`;
+  onlineListEl.replaceChildren();
 
   if (!list.length) {
-    onlineListEl.innerHTML = '<div class="admin-note">Nobody online.</div>';
+    const empty = document.createElement("div");
+    empty.className = "admin-note";
+    empty.textContent = "Nobody online.";
+    onlineListEl.appendChild(empty);
     return;
   }
-
-  onlineListEl.innerHTML = "";
 
   for (const player of list) {
     const item = document.createElement("div");
     item.className = "online-player";
 
-    const avatar = player.avatar_url
-      ? `<img src="${player.avatar_url}" alt="">`
-      : `<div class="online-avatar-fallback">${escapeHtml(String(player.username || "?").slice(0, 1).toUpperCase())}</div>`;
+    const avatarUrl = safeImageUrl(player.avatar_url);
+    if (avatarUrl) {
+      const img = document.createElement("img");
+      img.src = avatarUrl;
+      img.alt = "";
+      img.referrerPolicy = "no-referrer";
+      item.appendChild(img);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "online-avatar-fallback";
+      fallback.textContent = String(player.username || "?").slice(0, 1).toUpperCase();
+      item.appendChild(fallback);
+    }
 
-    item.innerHTML = `
-      ${avatar}
-      <span>${escapeHtml(player.username)}</span>
-    `;
+    const name = document.createElement("span");
+    name.textContent = String(player.username || "Unknown");
+    item.appendChild(name);
 
     onlineListEl.appendChild(item);
   }
 }
-
 function updateOnlineFromPresence() {
   if (!onlineChannel) {
     renderOnlinePlayers([]);
@@ -2615,7 +2636,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 53;
+const MINEPLACE_VERSION = 54;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -2777,7 +2798,7 @@ function openInspectModal(data, x, y) {
   if (inspectOwnerNameEl) inspectOwnerNameEl.textContent = username;
   if (inspectOwnerNoteEl) inspectOwnerNoteEl.textContent = note;
 
-  const avatar = data?.avatar_url || "";
+  const avatar = safeImageUrl(data?.avatar_url);
   if (inspectAvatarEl && inspectAvatarFallbackEl) {
     if (avatar) {
       inspectAvatarEl.src = avatar;
@@ -3217,98 +3238,60 @@ adminRefreshReportsBtnEl?.addEventListener("click", adminLoadReports);
 
 function renderAuth() {
   if (!authBox) return;
+  authBox.replaceChildren();
 
   if (!supabaseClient) {
-    authBox.innerHTML = '<span class="auth-user"><span>DB offline</span></span>';
+    const wrap = document.createElement("span");
+    wrap.className = "auth-user";
+    const text = document.createElement("span");
+    text.textContent = "DB offline";
+    wrap.appendChild(text);
+    authBox.appendChild(wrap);
     return;
   }
 
   if (!currentUser) {
-    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
-    document.getElementById("loginBtn")?.addEventListener("click", loginWithDiscord);
+    const loginBtn = document.createElement("button");
+    loginBtn.id = "loginBtn";
+    loginBtn.textContent = "Login with Discord";
+    loginBtn.addEventListener("click", loginWithDiscord);
+    authBox.appendChild(loginBtn);
     return;
   }
 
   const profile = getDiscordProfile(currentUser);
-  const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : "";
-  const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : "";
+  const userWrap = document.createElement("div");
+  userWrap.className = "auth-user";
 
-  authBox.innerHTML = `
-    <div class="auth-user">
-      ${avatar}
-      <span>${escapeHtml(profile.username)}</span>
-    </div>
-    ${adminButton}
-    <button id="logoutBtn">Logout</button>
-  `;
-
-  document.getElementById("adminBtn")?.addEventListener("click", openAdminPanel);
-  document.getElementById("logoutBtn")?.addEventListener("click", logout);
-}
-
-function buildPalette() {
-  if (!paletteEl) return;
-  paletteEl.innerHTML = "";
-
-  const safeBlocks = filteredBlockDefs.filter(block => block && block.id && block.src && !block.isTool && block.id !== "__cursor__");
-
-  if (blockCountEl) {
-    blockCountEl.textContent = `${safeBlocks.length} blocks`;
-  }
-
-  if (!safeBlocks.some(block => block.id === selectedBlock)) {
-    selectedBlock = safeBlocks[0]?.id || DEFAULT_GRID_BLOCK;
-  }
-
-  for (const block of safeBlocks) {
-    const item = document.createElement("button");
-    item.className = "block" + (block.id === selectedBlock ? " selected" : "");
-    item.title = block.name;
-    item.type = "button";
-
-    item.onclick = () => {
-      selectedBlock = block.id;
-      document.querySelectorAll(".block").forEach(el => el.classList.remove("selected"));
-      item.classList.add("selected");
-    };
-
+  const avatarUrl = safeImageUrl(profile.avatar_url);
+  if (avatarUrl) {
     const img = document.createElement("img");
-    img.src = block.src;
-    img.alt = block.name;
-    img.width = 32;
-    img.height = 32;
-    img.loading = "eager";
-    item.appendChild(img);
-
-    paletteEl.appendChild(item);
+    img.src = avatarUrl;
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    userWrap.appendChild(img);
   }
 
-  requestAnimationFrame(() => {
-    paletteEl.scrollLeft = 0;
-    updateInventorySlider();
-  });
-}
+  const username = document.createElement("span");
+  username.textContent = String(profile.username || "Player");
+  userWrap.appendChild(username);
+  authBox.appendChild(userWrap);
 
-function filterBlocks() {
-  const query = normalizeSearch(blockSearchEl?.value || "");
-
-  const baseBlocks = BLOCK_DEFS.filter(block => block && block.id !== "__cursor__" && !block.isTool);
-
-  filteredBlockDefs = !query
-    ? [...baseBlocks]
-    : baseBlocks.filter(block => {
-        const id = String(block.id || "").toLowerCase();
-        const name = String(block.name || "").toLowerCase().replaceAll(" ", "_");
-        return id.includes(query) || name.includes(query);
-      });
-
-  if (!filteredBlockDefs.some(block => block.id === selectedBlock) && filteredBlockDefs.length > 0) {
-    selectedBlock = filteredBlockDefs[0].id;
+  if (isAdmin()) {
+    const adminBtn = document.createElement("button");
+    adminBtn.id = "adminBtn";
+    adminBtn.className = "small-btn";
+    adminBtn.textContent = "Admin";
+    adminBtn.addEventListener("click", openAdminPanel);
+    authBox.appendChild(adminBtn);
   }
 
-  buildPalette();
+  const logoutBtn = document.createElement("button");
+  logoutBtn.id = "logoutBtn";
+  logoutBtn.textContent = "Logout";
+  logoutBtn.addEventListener("click", logout);
+  authBox.appendChild(logoutBtn);
 }
-
 async function inspectBlock(tileX, tileY) {
   if (!supabaseClient) return;
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
