@@ -1081,7 +1081,7 @@ let inventoryHidden = localStorage.getItem('mineplace_inventory_hidden') === '1'
 let playerState = normalizePlayerState({
   blocks: 0,
   block_capacity: 50,
-  recharge_seconds: 30,
+  recharge_seconds: 20,
   next_splash_at: null
 });
 
@@ -1092,7 +1092,7 @@ function normalizePlayerState(state) {
   return {
     blocks: Number(raw.blocks ?? raw.splashes ?? 0),
     block_capacity: Number(raw.block_capacity ?? raw.splash_capacity ?? 50),
-    recharge_seconds: Number(raw.recharge_seconds ?? raw.splash_recharge_seconds ?? 30),
+    recharge_seconds: Number(raw.recharge_seconds ?? raw.splash_recharge_seconds ?? 20),
     next_splash_at: raw.next_splash_at ?? raw.next_block_at ?? null
   };
 }
@@ -1247,24 +1247,28 @@ function safeImageUrl(value) {
 }
 
 
-function getDiscordProfile(sessionUser) {
+function getAuthProfile(sessionUser) {
   const meta = sessionUser?.user_metadata || {};
+  const email = String(sessionUser?.email || meta.email || "").trim();
+
   return {
     username:
       meta.full_name ||
       meta.name ||
-      meta.user_name ||
       meta.preferred_username ||
-      meta.provider_id ||
-      'Player',
-    avatar_url: meta.avatar_url || null
+      (email ? email.split("@")[0] : "") ||
+      "Player",
+    avatar_url:
+      meta.avatar_url ||
+      meta.picture ||
+      null
   };
 }
 
 async function ensureProfile(sessionUser) {
   if (!supabaseClient || !sessionUser) return;
 
-  const profile = getDiscordProfile(sessionUser);
+  const profile = getAuthProfile(sessionUser);
 
   const { data, error } = await supabaseClient.rpc("sync_my_profile", {
     p_username: profile.username,
@@ -1292,8 +1296,8 @@ async function loadCurrentProfile() {
 
 function getCurrentUsername() {
   const profileName = currentProfile?.username;
-  const discordName = getDiscordProfile(currentUser).username;
-  return String(profileName || discordName || "").toLowerCase();
+  const authName = getAuthProfile(currentUser).username;
+  return String(profileName || authName || "").toLowerCase();
 }
 
 function isAdmin() {
@@ -1567,7 +1571,7 @@ function startOnlinePresence() {
 
   stopOnlinePresence();
 
-  const profile = getDiscordProfile(currentUser);
+  const profile = getAuthProfile(currentUser);
 
   onlineChannel = supabaseClient.channel("mineplace-online", {
     config: {
@@ -1604,12 +1608,12 @@ function renderAuth() {
     return;
   }
   if (!currentUser) {
-    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
-    document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
+    authBox.innerHTML = '<button id="loginBtn">Login with Google</button>';
+    document.getElementById('loginBtn')?.addEventListener('click', loginWithGoogle);
     return;
   }
 
-  const profile = getDiscordProfile(currentUser);
+  const profile = getAuthProfile(currentUser);
   const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
 
   const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
@@ -1626,13 +1630,21 @@ function renderAuth() {
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
 }
 
-async function loginWithDiscord() {
+async function loginWithGoogle() {
   if (!supabaseClient) return;
+
   const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: 'discord',
-    options: { redirectTo: window.location.origin }
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin,
+      scopes: "openid email profile",
+      queryParams: {
+        prompt: "select_account"
+      }
+    }
   });
-  if (error) showToast('Discord login failed');
+
+  if (error) showToast("Google login failed");
 }
 
 async function logout() {
@@ -1644,7 +1656,7 @@ async function logout() {
   closeReportModal();
   closeInspectModal();
   renderAuth();
-  playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 30, next_splash_at: null });
+  playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 20, next_splash_at: null });
   renderBlocks();
 }
 
@@ -2636,7 +2648,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 54;
+const MINEPLACE_VERSION = 55;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -2680,12 +2692,12 @@ function renderAuth() {
     return;
   }
   if (!currentUser) {
-    authBox.innerHTML = '<button id="loginBtn">Login with Discord</button>';
-    document.getElementById('loginBtn')?.addEventListener('click', loginWithDiscord);
+    authBox.innerHTML = '<button id="loginBtn">Login with Google</button>';
+    document.getElementById('loginBtn')?.addEventListener('click', loginWithGoogle);
     return;
   }
 
-  const profile = getDiscordProfile(currentUser);
+  const profile = getAuthProfile(currentUser);
   const avatar = profile.avatar_url ? `<img src="${profile.avatar_url}" alt="">` : '';
   const adminButton = isAdmin() ? '<button id="adminBtn" class="small-btn">Admin</button>' : '';
 
@@ -3253,13 +3265,13 @@ function renderAuth() {
   if (!currentUser) {
     const loginBtn = document.createElement("button");
     loginBtn.id = "loginBtn";
-    loginBtn.textContent = "Login with Discord";
-    loginBtn.addEventListener("click", loginWithDiscord);
+    loginBtn.textContent = "Login with Google";
+    loginBtn.addEventListener("click", loginWithGoogle);
     authBox.appendChild(loginBtn);
     return;
   }
 
-  const profile = getDiscordProfile(currentUser);
+  const profile = getAuthProfile(currentUser);
   const userWrap = document.createElement("div");
   userWrap.className = "auth-user";
 
