@@ -1649,15 +1649,57 @@ async function loginWithGoogle() {
 
 async function logout() {
   if (!supabaseClient) return;
-  await supabaseClient.auth.signOut();
+
+  try {
+    await supabaseClient.auth.signOut();
+  } catch {
+    try {
+      await supabaseClient.auth.signOut({ scope: "local" });
+    } catch {}
+  }
+
   currentUser = null;
   currentProfile = null;
   stopOnlinePresence();
   closeReportModal();
   closeInspectModal();
   renderAuth();
-  playerState = normalizePlayerState({ blocks: 0, block_capacity: 50, recharge_seconds: 20, next_splash_at: null });
+  playerState = normalizePlayerState({
+    blocks: 0,
+    block_capacity: 50,
+    recharge_seconds: 20,
+    next_splash_at: null
+  });
   renderBlocks();
+}
+
+
+function isGoogleAuthUser(user) {
+  if (!user) return false;
+
+  const primaryProvider = String(user.app_metadata?.provider || "").toLowerCase();
+  if (primaryProvider === "google") return true;
+
+  const providers = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers.map(value => String(value).toLowerCase())
+    : [];
+
+  if (providers.includes("google")) return true;
+
+  const identities = Array.isArray(user.identities) ? user.identities : [];
+  return identities.some(identity => String(identity?.provider || "").toLowerCase() === "google");
+}
+
+async function clearLegacyAuthSession() {
+  if (!supabaseClient) return;
+
+  try {
+    await supabaseClient.auth.signOut({ scope: "local" });
+  } catch {}
+
+  currentUser = null;
+  currentProfile = null;
+  stopOnlinePresence();
 }
 
 async function initAuth() {
@@ -1666,32 +1708,50 @@ async function initAuth() {
     return;
   }
 
-  const { data } = await supabaseClient.auth.getSession();
-  currentUser = data?.session?.user || null;
-  if (currentUser) {
-    await ensureProfile(currentUser);
-    await loadCurrentProfile();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const localSession = sessionData?.session || null;
+
+  if (localSession) {
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+
+    if (userError || !userData?.user || !isGoogleAuthUser(userData.user)) {
+      await clearLegacyAuthSession();
+    } else {
+      currentUser = userData.user;
+      await ensureProfile(currentUser);
+      await loadCurrentProfile();
+    }
+  } else {
+    currentUser = null;
+    currentProfile = null;
   }
+
   renderAuth();
   startOnlinePresence();
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    currentUser = session?.user || null;
+    const user = session?.user || null;
+
+    if (user && !isGoogleAuthUser(user)) {
+      await clearLegacyAuthSession();
+      renderAuth();
+      renderBlocks();
+      return;
+    }
+
+    currentUser = user;
+
     if (currentUser) {
       await ensureProfile(currentUser);
       await loadCurrentProfile();
       await loadPlayerState();
-    } else {
-      currentProfile = null;
-    }
-    renderAuth();
-
-    if (currentUser) {
       startOnlinePresence();
     } else {
+      currentProfile = null;
       stopOnlinePresence();
     }
 
+    renderAuth();
     renderBlocks();
   });
 }
@@ -2648,7 +2708,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 55;
+const MINEPLACE_VERSION = 56;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
