@@ -3027,7 +3027,6 @@ function normalizeRotation(value) {
 function rotateSelectedBlockClockwise() {
   if (inventoryHidden) return;
   selectedRotation = normalizeRotation(selectedRotation + 90);
-  showToast(`Rotation ${selectedRotation}°`);
   scheduleDraw();
 }
 
@@ -3285,18 +3284,32 @@ async function viewMapPng() {
 }
 
 
-downloadFormatBtnEl?.addEventListener("click", e => {
-  e.stopPropagation();
 
-  const willOpen = downloadFormatMenuEl?.classList.contains("hidden");
-  downloadFormatMenuEl?.classList.toggle("hidden");
-  downloadFormatBtnEl?.classList.toggle("open", !!willOpen);
+
+
+
+
+
+
+
+
+function setDownloadFormatMenuOpen(open) {
+  if (!downloadFormatMenuEl || !downloadFormatBtnEl) return;
+  downloadFormatMenuEl.classList.toggle("hidden", !open);
+  downloadFormatBtnEl.classList.toggle("open", open);
+}
+
+downloadFormatBtnEl?.addEventListener("click", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDownloadFormatMenuOpen(downloadFormatMenuEl?.classList.contains("hidden"));
 });
 
 downloadFormatBtnEl?.addEventListener("keydown", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
   e.preventDefault();
-  downloadFormatBtnEl.click();
+  e.stopPropagation();
+  setDownloadFormatMenuOpen(downloadFormatMenuEl?.classList.contains("hidden"));
 });
 
 downloadFormatMenuEl?.addEventListener("click", e => {
@@ -3310,15 +3323,14 @@ downloadFormatMenuEl?.addEventListener("click", e => {
     downloadMapLabelEl.textContent = `Download Map ${info.extension.toUpperCase()}`;
   }
 
-  downloadFormatMenuEl.classList.add("hidden");
-  downloadFormatBtnEl?.classList.remove("open");
+  setDownloadFormatMenuOpen(false);
 });
 
 document.addEventListener("click", e => {
-  if (!downloadFormatMenuEl || !downloadFormatBtnEl) return;
-  if (downloadFormatMenuEl.contains(e.target) || downloadFormatBtnEl.contains(e.target)) return;
-  downloadFormatMenuEl.classList.add("hidden");
-  downloadFormatBtnEl?.classList.remove("open");
+  if (!downloadFormatMenuEl?.classList.contains("hidden")) {
+    const root = document.querySelector(".download-map-control-v68");
+    if (!root?.contains(e.target)) setDownloadFormatMenuOpen(false);
+  }
 });
 
 viewMapBtnEl?.addEventListener("click", viewMapPng);
@@ -3667,7 +3679,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 66;
+const MINEPLACE_VERSION = 68;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [

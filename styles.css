@@ -4039,3 +4039,221 @@ button#downloadFormatBtn.open .download-chevron {
 body.inventory-hidden .inventory-toggle {
   bottom: 18px !important;
 }
+
+
+/* Version 67: FINAL download chevron fix */
+.download-map-control {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.download-map-main {
+  padding-right: 34px !important;
+}
+
+/* This is a SPAN, not a button. No background/border/bubble whatsoever. */
+#downloadFormatBtn.download-format-trigger {
+  position: absolute !important;
+  right: 9px !important;
+  top: 50% !important;
+  width: 18px !important;
+  height: 18px !important;
+  transform: translateY(-50%) !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,.74) !important;
+  cursor: pointer !important;
+  z-index: 100 !important;
+  line-height: 0 !important;
+}
+
+#downloadFormatBtn.download-format-trigger:hover,
+#downloadFormatBtn.download-format-trigger:focus,
+#downloadFormatBtn.download-format-trigger:active {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: rgba(255,255,255,1) !important;
+}
+
+#downloadFormatBtn .download-chevron {
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .18s ease !important;
+  pointer-events: none !important;
+}
+
+#downloadFormatBtn.open .download-chevron {
+  transform: rotate(180deg) !important;
+}
+
+/* Explicitly neutralize any historical selector targeting format trigger descendants */
+.map-actions #downloadFormatBtn,
+.download-map-control #downloadFormatBtn {
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+
+/* =========================================================
+   Version 68 - COMPLETE Download Map control rewrite
+   ========================================================= */
+
+.download-map-control-v68 {
+  position: relative !important;
+  display: inline-block !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.download-map-button-v68 {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 190px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 38px 0 15px !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  border-radius: 999px !important;
+  background: rgba(29, 44, 37, .96) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,.94) !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  font: inherit !important;
+}
+
+.download-map-button-v68:hover,
+.download-map-button-v68:focus,
+.download-map-button-v68:active {
+  background: rgba(36, 52, 44, .98) !important;
+  border-color: rgba(255,255,255,.11) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.download-map-label-v68 {
+  display: block !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+}
+
+/* Chevron is physically INSIDE .download-map-button-v68 */
+.download-format-trigger-v68 {
+  position: absolute !important;
+  right: 9px !important;
+  top: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  transform: translateY(-50%) !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  color: rgba(255,255,255,.72) !important;
+  cursor: pointer !important;
+  z-index: 10 !important;
+}
+
+.download-format-trigger-v68:hover,
+.download-format-trigger-v68:focus,
+.download-format-trigger-v68:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  color: rgba(255,255,255,1) !important;
+}
+
+.download-chevron-v68 {
+  width: 15px !important;
+  height: 15px !important;
+  display: block !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .18s ease !important;
+  pointer-events: none !important;
+}
+
+.download-format-trigger-v68.open .download-chevron-v68 {
+  transform: rotate(180deg) !important;
+}
+
+.download-format-menu-v68 {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: calc(100% + 8px) !important;
+  min-width: 140px !important;
+  padding: 6px !important;
+  display: grid !important;
+  gap: 4px !important;
+  border-radius: 16px !important;
+  background: rgba(55, 91, 42, .97) !important;
+  border: 1px solid rgba(154,220,134,.14) !important;
+  box-shadow: 0 14px 32px rgba(0,0,0,.22) !important;
+  z-index: 100 !important;
+}
+
+.download-format-menu-v68.hidden {
+  display: none !important;
+}
+
+.download-format-menu-v68 button {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 100% !important;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: rgba(29, 44, 37, .96) !important;
+  color: rgba(255,255,255,.92) !important;
+  font: inherit !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.download-format-menu-v68 button:hover {
+  background: rgba(39, 57, 47, .98) !important;
+}
+
+/* Kill ALL previous download-control styling for old classes */
+.download-map-control,
+.download-map-pill,
+.download-map-main,
+.download-format-trigger,
+.download-chevron-clean,
+.download-chevron {
+  box-shadow: none !important;
+}
