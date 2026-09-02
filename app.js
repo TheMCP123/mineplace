@@ -1721,6 +1721,7 @@ let currentProfile = null;
 let selectedAdminUser = null;
 let realtimeChannel = null;
 let onlineChannel = null;
+const presenceSessionKey = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 let isPlacing = false;
 let toastTimer = null;
 let exportInProgress = false;
@@ -2189,8 +2190,8 @@ function renderOnlinePlayers(players) {
   const unique = new Map();
 
   for (const player of players) {
-    if (!player?.user_id || player.is_banned) continue;
-    if (!unique.has(player.user_id)) unique.set(player.user_id, player);
+    if (!player?.presence_id || player.is_banned) continue;
+    if (!unique.has(player.presence_id)) unique.set(player.presence_id, player);
   }
 
   const list = [...unique.values()]
@@ -2267,7 +2268,7 @@ function startOnlinePresence() {
   onlineChannel = supabaseClient.channel("mineplace-online", {
     config: {
       presence: {
-        key: currentUser.id
+        key: presenceSessionKey
       }
     }
   });
@@ -2280,7 +2281,7 @@ function startOnlinePresence() {
       if (status !== "SUBSCRIBED") return;
 
       await onlineChannel.track({
-        user_id: currentUser.id,
+        presence_id: presenceSessionKey,
         username: profile.username,
         avatar_url: profile.avatar_url,
         is_banned: !!currentProfile?.is_banned,
@@ -2441,6 +2442,8 @@ async function initAuth() {
       startOnlinePresence();
     } else {
       currentProfile = null;
+      adminPaintMode = false;
+      refreshAdminPaintToolButton();
       stopOnlinePresence();
     }
 
@@ -3059,7 +3062,6 @@ function filterBlocks() {
   }
 
   buildPalette();
-  searchReportUsernames("");
 }
 
 function buildPalette() {
@@ -3216,7 +3218,16 @@ async function createMapBlob(format = selectedDownloadFormat) {
     }
 
     const info = getDownloadFormatInfo(format);
-    return await new Promise(resolve => exportCanvas.toBlob(resolve, info.mime, info.quality));
+    const blob = await new Promise(resolve => exportCanvas.toBlob(resolve, info.mime, info.quality));
+
+    if (!blob) return null;
+
+    // Some browsers silently fall back to PNG for unsupported formats.
+    // Never save a PNG payload with a .bmp/.avif/etc extension.
+    return {
+      blob,
+      actualMime: blob.type || info.mime
+    };
   } finally {
     exportInProgress = false;
     if (viewMapBtnEl) viewMapBtnEl.disabled = false;
@@ -3225,26 +3236,42 @@ async function createMapBlob(format = selectedDownloadFormat) {
 }
 
 async function downloadMap() {
-  const info = getDownloadFormatInfo(selectedDownloadFormat);
-  const blob = await createMapBlob(info.format);
+  const requested = getDownloadFormatInfo(selectedDownloadFormat);
+  const result = await createMapBlob(requested.format);
 
-  if (!blob) {
+  if (!result?.blob) {
     showToast("Map export failed");
     return;
   }
 
-  const url = URL.createObjectURL(blob);
+  let actual = requested;
+  if (result.actualMime !== requested.mime) {
+    actual = result.actualMime === "image/png"
+      ? getDownloadFormatInfo("png")
+      : result.actualMime === "image/jpeg"
+        ? getDownloadFormatInfo("jpeg")
+        : result.actualMime === "image/webp"
+          ? getDownloadFormatInfo("webp")
+          : requested;
+  }
+
+  const url = URL.createObjectURL(result.blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `mineplace-map.${info.extension}`;
+  link.download = `mineplace-map.${actual.extension}`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+
+  if (actual.extension !== requested.extension) {
+    showToast(`${requested.extension.toUpperCase()} unsupported here — downloaded ${actual.extension.toUpperCase()}`);
+  }
 }
 
 async function viewMapPng() {
-  const blob = await createMapBlob("png");
+  const result = await createMapBlob("png");
+  const blob = result?.blob || null;
   if (!blob) {
     showToast("Map export failed");
     return;
@@ -3640,7 +3667,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 65;
+const MINEPLACE_VERSION = 66;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -4445,7 +4472,6 @@ function updateVisibleVersion() {
   await loadTextures();
   await initAuth();
   buildPalette();
-  searchReportUsernames("");
   resize();
   await loadVisibleBlocks();
   await loadPlayerState();
