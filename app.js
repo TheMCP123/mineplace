@@ -1113,7 +1113,8 @@ const BLOCK_DEFS = [
     "id": "crimson_stem",
     "name": "Crimson Stem",
     "src": "/textures/crimson_stem.png",
-    "sort_order": 1750
+    "sort_order": 1750,
+    "preview_src": "/textures/crimson_stem_preview.png"
   },
   {
     "id": "crimson_stem_top",
@@ -1557,7 +1558,8 @@ const BLOCK_DEFS = [
     "id": "warped_stem",
     "name": "Warped Stem",
     "src": "/textures/warped_stem.png",
-    "sort_order": 2490
+    "sort_order": 2490,
+    "preview_src": "/textures/warped_stem_preview.png"
   },
   {
     "id": "warped_stem_top",
@@ -1707,6 +1709,7 @@ let soundUnlocked = false;
 let dpr = Math.max(1, window.devicePixelRatio || 1);
 let camera = { x: MAP_SIZE * TILE_SIZE / 2, y: MAP_SIZE * TILE_SIZE / 2, zoom: 1 };
 let selectedBlock = DEFAULT_GRID_BLOCK;
+let selectedRotation = 0;
 let filteredBlockDefs = [...BLOCK_DEFS];
 let isPanning = false;
 let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
@@ -1759,6 +1762,7 @@ function normalizePlayerState(state) {
 
 
 const placed = new Map();
+const placedRotations = new Map();
 const placementAnimations = new Map();
 
 
@@ -2529,7 +2533,7 @@ function loadTexture(block) {
       resolve(img);
     };
     img.onerror = () => resolve(null);
-    img.src = block.src;
+    img.src = block.preview_src || block.src;
   });
 }
 
@@ -2599,10 +2603,12 @@ async function loadVisibleBlocks() {
   });
   if (error) return;
   placed.clear();
+  placedRotations.clear();
   const rows = Array.isArray(data) ? data : [];
   for (const row of rows) {
     if (Number.isInteger(row.x) && Number.isInteger(row.y) && row.block_id) {
       placed.set(key(row.x, row.y), row.block_id);
+      placedRotations.set(key(row.x, row.y), normalizeRotation(row.rotation ?? 0));
     }
   }
 }
@@ -2616,6 +2622,7 @@ function subscribeToRealtime() {
       const row = payload.new;
       if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y) || !row.block_id) return;
       placed.set(key(row.x, row.y), row.block_id);
+      placedRotations.set(key(row.x, row.y), normalizeRotation(row.rotation ?? 0));
       scheduleDraw();
     })
     .subscribe();
@@ -2651,25 +2658,59 @@ function clampCamera() {
 }
 
 
-function drawBlockTexture(ctx2d, texture, blockId, tileX, tileY, dx, dy, dw = TILE_SIZE, dh = TILE_SIZE) {
+function drawBlockTexture(
+  ctx2d,
+  texture,
+  blockId,
+  tileX,
+  tileY,
+  dx,
+  dy,
+  dw = TILE_SIZE,
+  dh = TILE_SIZE,
+  rotation = null
+) {
   if (!texture) return;
+
+  const appliedRotation = normalizeRotation(
+    rotation === null || rotation === undefined
+      ? placedRotations.get(key(tileX, tileY)) || 0
+      : rotation
+  );
+
+  let sx = 0;
+  let sy = 0;
+  let sw = texture.naturalWidth || texture.width;
+  let sh = texture.naturalHeight || texture.height;
 
   if (
     VERTICAL_PATTERN_BLOCKS.has(blockId) &&
-    texture.naturalWidth === 16 &&
-    texture.naturalHeight >= 80
+    sw === 16 &&
+    sh >= 80
   ) {
-    const frameCount = Math.max(1, Math.floor(texture.naturalHeight / 16));
-    const frame = ((tileY % frameCount) + frameCount) % frameCount;
-    ctx2d.drawImage(
-      texture,
-      0, frame * 16, 16, 16,
-      dx, dy, dw, dh
-    );
-    return;
+    const frameCount = Math.max(1, Math.floor(sh / 16));
+
+    // Canvas Y grows downward, while a Minecraft-style column grows upward.
+    // Reverse Y here so adjacent blocks form the correct continuous strip.
+    const frame = ((-tileY % frameCount) + frameCount) % frameCount;
+
+    sx = 0;
+    sy = frame * 16;
+    sw = 16;
+    sh = 16;
   }
 
-  ctx2d.drawImage(texture, dx, dy, dw, dh);
+  ctx2d.save();
+
+  if (appliedRotation !== 0) {
+    ctx2d.translate(dx + dw / 2, dy + dh / 2);
+    ctx2d.rotate(appliedRotation * Math.PI / 180);
+    ctx2d.drawImage(texture, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh);
+  } else {
+    ctx2d.drawImage(texture, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+  ctx2d.restore();
 }
 
 function drawGrid(viewW, viewH) {
@@ -2776,7 +2817,8 @@ function drawSelectedBlockPreview() {
     x * TILE_SIZE,
     y * TILE_SIZE,
     TILE_SIZE,
-    TILE_SIZE
+    TILE_SIZE,
+    selectedRotation
   );
 
   ctx.globalAlpha = occupied ? 0.92 : 0.72;
@@ -2927,7 +2969,8 @@ async function placeAt(tileX, tileY) {
   const { data, error } = await supabaseClient.rpc("place_block", {
     p_x: tileX,
     p_y: tileY,
-    p_block_id: selectedBlock
+    p_block_id: selectedBlock,
+    p_rotation: selectedRotation
   });
 
   isPlacing = false;
@@ -2958,6 +3001,7 @@ async function placeAt(tileX, tileY) {
 
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
+    placedRotations.set(key(data.block.x, data.block.y), normalizeRotation(data.block.rotation ?? selectedRotation));
     addPlacementAnimation(data.block.x, data.block.y);
   }
 
@@ -2967,6 +3011,19 @@ async function placeAt(tileX, tileY) {
 
   if (data.state) playerState = normalizePlayerState(data.state);
   renderBlocks();
+  scheduleDraw();
+}
+
+
+function normalizeRotation(value) {
+  const n = Number(value) || 0;
+  return ((Math.round(n / 90) * 90) % 360 + 360) % 360;
+}
+
+function rotateSelectedBlockClockwise() {
+  if (inventoryHidden) return;
+  selectedRotation = normalizeRotation(selectedRotation + 90);
+  showToast(`Rotation ${selectedRotation}°`);
   scheduleDraw();
 }
 
@@ -3022,7 +3079,7 @@ function buildPalette() {
     };
 
     const img = document.createElement("img");
-    img.src = block.src;
+    img.src = block.preview_src || block.src;
     img.alt = block.name;
     img.width = 32;
     img.height = 32;
@@ -3148,7 +3205,7 @@ async function createMapBlob(format = selectedDownloadFormat) {
       const texture = resolveTextureAsset(row.block_id);
       if (!texture) continue;
 
-      drawBlockTexture(exportCtx, texture, row.block_id, row.x, row.y, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      drawBlockTexture(exportCtx, texture, row.block_id, row.x, row.y, row.x * TILE_SIZE, row.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, row.rotation ?? 0);
 
       if (i % 2000 === 0) {
         await nextFrame();
@@ -3204,6 +3261,12 @@ downloadFormatBtnEl?.addEventListener("click", e => {
   const willOpen = downloadFormatMenuEl?.classList.contains("hidden");
   downloadFormatMenuEl?.classList.toggle("hidden");
   downloadFormatBtnEl?.classList.toggle("open", !!willOpen);
+});
+
+downloadFormatBtnEl?.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  e.preventDefault();
+  downloadFormatBtnEl.click();
 });
 
 downloadFormatMenuEl?.addEventListener("click", e => {
@@ -3552,11 +3615,28 @@ window.addEventListener('keyup', e => {
     
   }
 });
+
+window.addEventListener("keydown", e => {
+  if (e.code !== "KeyR" || e.repeat) return;
+
+  const target = e.target;
+  const tag = String(target?.tagName || "").toLowerCase();
+  if (
+    tag === "input" ||
+    tag === "textarea" ||
+    tag === "select" ||
+    target?.isContentEditable
+  ) return;
+
+  e.preventDefault();
+  rotateSelectedBlockClockwise();
+});
+
 window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 63;
+const MINEPLACE_VERSION = 64;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -3640,7 +3720,7 @@ function buildPalette() {
     };
 
     const img = document.createElement("img");
-    img.src = block.src;
+    img.src = block.preview_src || block.src;
     img.alt = block.name;
     img.width = 32;
     img.height = 32;
@@ -4090,7 +4170,8 @@ async function placeAt(tileX, tileY) {
   const { data, error } = await supabaseClient.rpc('place_block', {
     p_x: tileX,
     p_y: tileY,
-    p_block_id: selectedBlock
+    p_block_id: selectedBlock,
+    p_rotation: selectedRotation
   });
   isPlacing = false;
 
@@ -4296,7 +4377,8 @@ async function placeAt(tileX, tileY) {
   const { data, error } = await supabaseClient.rpc(rpcName, {
     p_x: tileX,
     p_y: tileY,
-    p_block_id: selectedBlock
+    p_block_id: selectedBlock,
+    p_rotation: selectedRotation
   });
 
   isPlacing = false;
@@ -4334,6 +4416,7 @@ async function placeAt(tileX, tileY) {
 
   if (data.block?.block_id) {
     placed.set(key(data.block.x, data.block.y), data.block.block_id);
+    placedRotations.set(key(data.block.x, data.block.y), normalizeRotation(data.block.rotation ?? selectedRotation));
     addPlacementAnimation?.(data.block.x, data.block.y, data.block.block_id);
   }
 

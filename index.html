@@ -6,7 +6,7 @@
   <title>Mineplace</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="stylesheet" href="/styles.css?v=63" />
+  <link rel="stylesheet" href="/styles.css?v=64" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -53,7 +53,11 @@
     <button id="viewMapBtn" class="small-btn" type="button">View Map</button>
     <div class="download-map-control">
       <button id="downloadMapBtn" class="small-btn download-main-btn" type="button">Download Map PNG</button>
-      <button id="downloadFormatBtn" class="download-format-btn" type="button" aria-label="Choose download format" title="Choose format"><span class="download-chevron-clean" aria-hidden="true"></span></button>
+      <span id="downloadFormatBtn" class="download-format-trigger" role="button" tabindex="0" aria-label="Choose download format" title="Choose format">
+        <svg class="download-chevron" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
       <div id="downloadFormatMenu" class="download-format-menu hidden">
         <button type="button" data-format="png">PNG</button>
         <button type="button" data-format="jpeg">JPG</button>
@@ -202,6 +206,15 @@
           </div>
         </div>
 
+
+        <div class="help-row">
+          <div class="mouse-key">R</div>
+          <div>
+            <strong>Rotate block</strong>
+            <span>Rotate the selected block 90° clockwise before placing it.</span>
+          </div>
+        </div>
+
         <div class="help-row">
           <div class="mouse-key">Wheel</div>
           <div>
@@ -263,11 +276,11 @@
   </div>
 
   <div class="site-meta">
-    <div class="site-version">Version 63</div>
+    <div class="site-version">Version 64</div>
     <div class="site-since">Since 6/30/2026 California</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/app.js?v=63"></script>
+  <script src="/app.js?v=64"></script>
 </body>
 </html>
