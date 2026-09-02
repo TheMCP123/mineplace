@@ -1250,14 +1250,17 @@ function getDiscordProfile(sessionUser) {
 
 async function ensureProfile(sessionUser) {
   if (!supabaseClient || !sessionUser) return;
+
   const profile = getDiscordProfile(sessionUser);
-  await supabaseClient
-    .from('profiles')
-    .upsert({
-      id: sessionUser.id,
-      username: profile.username,
-      avatar_url: profile.avatar_url
-    }, { onConflict: 'id' });
+
+  const { data, error } = await supabaseClient.rpc("sync_my_profile", {
+    p_username: profile.username,
+    p_avatar_url: profile.avatar_url
+  });
+
+  if (error || !data?.success) {
+    console.warn("sync_my_profile failed", error, data);
+  }
 }
 
 
@@ -1265,13 +1268,12 @@ async function loadCurrentProfile() {
   currentProfile = null;
   if (!supabaseClient || !currentUser) return null;
 
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("id,username,role,is_banned,banned_until,ban_reason,discord_id,block_capacity")
-    .eq("id", currentUser.id)
-    .maybeSingle();
+  const { data, error } = await supabaseClient.rpc("get_my_profile");
 
-  if (!error && data) currentProfile = data;
+  if (!error && data?.success && data.profile) {
+    currentProfile = data.profile;
+  }
+
   return currentProfile;
 }
 
@@ -1282,8 +1284,7 @@ function getCurrentUsername() {
 }
 
 function isAdmin() {
-  const username = getCurrentUsername();
-  return currentProfile?.role === "admin" || username === "themcp123";
+  return currentProfile?.role === "admin";
 }
 
 function openAdminPanel() {
@@ -2614,7 +2615,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 52;
+const MINEPLACE_VERSION = 53;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -2810,21 +2811,8 @@ async function inspectBlock(tileX, tileY) {
   openInspectModal(data, tileX, tileY);
 }
 
-async function searchReportUsernames(query = "") {
-  if (!supabaseClient || !reportUsernamesEl) return;
-
-  const { data, error } = await supabaseClient.rpc("search_usernames", {
-    p_query: query || ""
-  });
-
-  if (error || !data?.success) return;
-
-  reportUsernamesEl.innerHTML = "";
-  for (const username of data.usernames || []) {
-    const option = document.createElement("option");
-    option.value = username;
-    reportUsernamesEl.appendChild(option);
-  }
+async function searchReportUsernames() {
+  if (reportUsernamesEl) reportUsernamesEl.innerHTML = "";
 }
 
 function queueSearchReportUsernames() {
