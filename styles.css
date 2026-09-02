@@ -2809,3 +2809,95 @@ button.small-btn:hover,
     height: 20px !important;
   }
 }
+
+
+/* Version 57: download formats + slightly smaller UI */
+html {
+  --ui-scale-v57: .94;
+}
+
+.hud,
+.palette-wrap,
+.sheet-card,
+.admin-card,
+.toast {
+  zoom: var(--ui-scale-v57);
+}
+
+/* Keep fixed positioning visually aligned after zoom. */
+.palette-wrap {
+  transform-origin: bottom center !important;
+}
+
+.download-map-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.download-map-control .download-main-btn {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: 0 !important;
+}
+
+.download-map-control .download-format-btn {
+  width: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.download-chevron {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid rgba(255,255,255,.82);
+  border-bottom: 2px solid rgba(255,255,255,.82);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.download-format-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  min-width: 100%;
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  border-radius: 14px;
+  background: rgba(31, 46, 39, .98);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 14px 34px rgba(0,0,0,.32);
+  z-index: 80;
+  animation: modalPopIn .14s ease both;
+}
+
+.download-format-menu.hidden {
+  display: none !important;
+}
+
+.download-format-menu button {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: transparent;
+  color: rgba(255,255,255,.90);
+  font: inherit;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.download-format-menu button:hover {
+  background: rgba(255,255,255,.08);
+}
+
+@media (max-width: 760px) {
+  html {
+    --ui-scale-v57: .96;
+  }
+}

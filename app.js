@@ -13,6 +13,8 @@ const inventorySliderEl = document.getElementById("inventorySlider");
 const inventoryToggleBtnEl = document.getElementById("inventoryToggleBtn");
 const viewMapBtnEl = document.getElementById("viewMapBtn");
 const downloadMapBtnEl = document.getElementById("downloadMapBtn");
+const downloadFormatBtnEl = document.getElementById("downloadFormatBtn");
+const downloadFormatMenuEl = document.getElementById("downloadFormatMenu");
 const helpBtnEl = document.getElementById("helpBtn");
 const helpModalEl = document.getElementById("helpModal");
 const helpCloseBtnEl = document.getElementById("helpCloseBtn");
@@ -1075,6 +1077,7 @@ let onlineChannel = null;
 let isPlacing = false;
 let toastTimer = null;
 let exportInProgress = false;
+let selectedDownloadFormat = "png";
 let rechargeSyncInProgress = false;
 let inventoryHidden = localStorage.getItem('mineplace_inventory_hidden') === '1';
 
@@ -2295,7 +2298,22 @@ async function getAllMapBlocksForExport() {
   return Array.isArray(data) ? data : [];
 }
 
-async function createMapPngBlob() {
+
+function getDownloadFormatInfo(format) {
+  const normalized = String(format || "png").toLowerCase();
+
+  if (normalized === "jpeg" || normalized === "jpg") {
+    return { format: "jpeg", mime: "image/jpeg", extension: "jpg", quality: 0.92 };
+  }
+
+  if (normalized === "webp") {
+    return { format: "webp", mime: "image/webp", extension: "webp", quality: 0.92 };
+  }
+
+  return { format: "png", mime: "image/png", extension: "png", quality: undefined };
+}
+
+async function createMapBlob(format = selectedDownloadFormat) {
   if (exportInProgress) return null;
   exportInProgress = true;
 
@@ -2350,7 +2368,8 @@ async function createMapPngBlob() {
       }
     }
 
-    return await new Promise(resolve => exportCanvas.toBlob(resolve, "image/png"));
+    const info = getDownloadFormatInfo(format);
+    return await new Promise(resolve => exportCanvas.toBlob(resolve, info.mime, info.quality));
   } finally {
     exportInProgress = false;
     if (viewMapBtnEl) viewMapBtnEl.disabled = false;
@@ -2358,8 +2377,10 @@ async function createMapPngBlob() {
   }
 }
 
-async function downloadMapPng() {
-  const blob = await createMapPngBlob();
+async function downloadMap() {
+  const info = getDownloadFormatInfo(selectedDownloadFormat);
+  const blob = await createMapBlob(info.format);
+
   if (!blob) {
     showToast("Map export failed");
     return;
@@ -2368,17 +2389,15 @@ async function downloadMapPng() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "mineplace-map.png";
+  link.download = `mineplace-map.${info.extension}`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-
-  showToast("Downloaded PNG");
 }
 
 async function viewMapPng() {
-  const blob = await createMapPngBlob();
+  const blob = await createMapBlob("png");
   if (!blob) {
     showToast("Map export failed");
     return;
@@ -2391,8 +2410,34 @@ async function viewMapPng() {
   showToast("Opened PNG");
 }
 
+
+downloadFormatBtnEl?.addEventListener("click", e => {
+  e.stopPropagation();
+  downloadFormatMenuEl?.classList.toggle("hidden");
+});
+
+downloadFormatMenuEl?.addEventListener("click", e => {
+  const button = e.target.closest("button[data-format]");
+  if (!button) return;
+
+  selectedDownloadFormat = button.dataset.format || "png";
+  const info = getDownloadFormatInfo(selectedDownloadFormat);
+
+  if (downloadMapBtnEl) {
+    downloadMapBtnEl.textContent = `Download Map ${info.extension.toUpperCase()}`;
+  }
+
+  downloadFormatMenuEl.classList.add("hidden");
+});
+
+document.addEventListener("click", e => {
+  if (!downloadFormatMenuEl || !downloadFormatBtnEl) return;
+  if (downloadFormatMenuEl.contains(e.target) || downloadFormatBtnEl.contains(e.target)) return;
+  downloadFormatMenuEl.classList.add("hidden");
+});
+
 viewMapBtnEl?.addEventListener("click", viewMapPng);
-downloadMapBtnEl?.addEventListener("click", downloadMapPng);
+downloadMapBtnEl?.addEventListener("click", downloadMap);
 
 
 
@@ -2708,7 +2753,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 56;
+const MINEPLACE_VERSION = 57;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
