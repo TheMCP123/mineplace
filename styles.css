@@ -4257,3 +4257,144 @@ body.inventory-hidden .inventory-toggle {
 .download-chevron {
   box-shadow: none !important;
 }
+
+
+/* =========================================================
+   Version 69 - Download pill with flex-flow chevron
+   ========================================================= */
+
+.download-map-control-v69 {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 8px 0 0 !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  border-radius: 999px !important;
+  background: rgba(29, 44, 37, .96) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+/* Main download action only owns the text area */
+.download-map-button-v69 {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 8px 0 15px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 999px 0 0 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,.94) !important;
+  font: inherit !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.download-map-button-v69:hover,
+.download-map-button-v69:focus,
+.download-map-button-v69:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.download-map-label-v69 {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+}
+
+/* Chevron is in FLEX FLOW, right after the label area */
+.download-format-trigger-v69 {
+  position: static !important;
+  flex: 0 0 auto !important;
+  width: 22px !important;
+  height: 34px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 999px 999px 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  color: rgba(255,255,255,.72) !important;
+  cursor: pointer !important;
+  line-height: 0 !important;
+}
+
+.download-format-trigger-v69:hover,
+.download-format-trigger-v69:focus,
+.download-format-trigger-v69:active {
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  color: rgba(255,255,255,1) !important;
+}
+
+.download-chevron-v69 {
+  width: 15px !important;
+  height: 15px !important;
+  display: block !important;
+  transform: rotate(0deg) !important;
+  transform-origin: 50% 50% !important;
+  transition: transform .18s ease !important;
+  pointer-events: none !important;
+}
+
+.download-format-trigger-v69.open .download-chevron-v69 {
+  transform: rotate(180deg) !important;
+}
+
+.download-format-menu-v69 {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: calc(100% + 8px) !important;
+  min-width: 140px !important;
+  padding: 6px !important;
+  display: grid !important;
+  gap: 4px !important;
+  border-radius: 16px !important;
+  background: rgba(55, 91, 42, .97) !important;
+  border: 1px solid rgba(154,220,134,.14) !important;
+  box-shadow: 0 14px 32px rgba(0,0,0,.22) !important;
+  z-index: 100 !important;
+}
+
+.download-format-menu-v69.hidden {
+  display: none !important;
+}
+
+.download-format-menu-v69 button {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 100% !important;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: rgba(29, 44, 37, .96) !important;
+  color: rgba(255,255,255,.92) !important;
+  font: inherit !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.download-format-menu-v69 button:hover {
+  background: rgba(39, 57, 47, .98) !important;
+}

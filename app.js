@@ -3328,7 +3328,7 @@ downloadFormatMenuEl?.addEventListener("click", e => {
 
 document.addEventListener("click", e => {
   if (!downloadFormatMenuEl?.classList.contains("hidden")) {
-    const root = document.querySelector(".download-map-control-v68");
+    const root = document.querySelector(".download-map-control-v69");
     if (!root?.contains(e.target)) setDownloadFormatMenuOpen(false);
   }
 });
@@ -3679,7 +3679,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 68;
+const MINEPLACE_VERSION = 69;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
