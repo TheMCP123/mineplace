@@ -2626,8 +2626,13 @@ function subscribeToRealtime() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'placed_blocks' }, payload => {
       const row = payload.new;
       if (!row || !Number.isInteger(row.x) || !Number.isInteger(row.y) || !row.block_id) return;
-      placed.set(key(row.x, row.y), row.block_id);
-      placedRotations.set(key(row.x, row.y), normalizeRotation(row.rotation ?? 0));
+      const tileKey = key(row.x, row.y);
+      placed.set(tileKey, row.block_id);
+
+      if (row.rotation !== undefined && row.rotation !== null) {
+        placedRotations.set(tileKey, normalizeRotation(row.rotation));
+      }
+
       scheduleDraw();
     })
     .subscribe();
@@ -3714,7 +3719,7 @@ window.addEventListener('resize', resize);
 
 
 
-const MINEPLACE_VERSION = 70;
+const MINEPLACE_VERSION = 71;
 const REPORT_MAX_DETAILS_LENGTH = 300;
 
 const REPORT_REASON_OPTIONS = [
@@ -4435,8 +4440,14 @@ async function placeAt(tileX, tileY) {
   if (inventoryHidden) return;
   if (tileX < 0 || tileY < 0 || tileX >= MAP_SIZE || tileY >= MAP_SIZE) return;
 
-  const currentBlock = placed.get(key(tileX, tileY)) || DEFAULT_GRID_BLOCK;
-  if (currentBlock === selectedBlock) {
+  const tileKey = key(tileX, tileY);
+  const currentBlock = placed.get(tileKey) || DEFAULT_GRID_BLOCK;
+  const currentRotation = normalizeRotation(placedRotations.get(tileKey) ?? 0);
+
+  if (
+    currentBlock === selectedBlock &&
+    currentRotation === normalizeRotation(selectedRotation)
+  ) {
     showToast("Already placed");
     return;
   }
